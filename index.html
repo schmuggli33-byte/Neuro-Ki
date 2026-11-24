@@ -319,11 +319,13 @@ textarea { min-height: 130px; resize: vertical; }
 
 </main>
 
+<script src="ai-config.js"></script>
 <script>
 function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
 function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 let cards = JSON.parse(lsGet("cards") || "[]");
 let vocab = JSON.parse(lsGet("vocab") || "[]");
+// The API URL is configured separately in ai-config.js after the backend is deployed.
 
 let index = 0;
 let vocabIndex = 0;
@@ -442,7 +444,8 @@ async function checkAIAnswer() {
   const btn = document.querySelector('#coachCard button');
   if (btn) btn.disabled = true;
   try {
-    const response = await fetch('/api/ai', {
+    if (!window.NEURO_LEARN_AI_API_URL) throw new Error('Der KI-Server ist noch nicht eingerichtet. Bitte zuerst den Server bereitstellen und ai-config.js konfigurieren.');
+    const response = await fetch(window.NEURO_LEARN_AI_API_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ task: 'grade', question: String(card.question || ''), expectedAnswer: String(card.answer || ''), studentAnswer: student })
     });
