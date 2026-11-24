@@ -173,10 +173,10 @@ textarea { min-height: 130px; resize: vertical; }
 
   <div class="card" id="coachCard">
     <h3 style="margin-top:0">KI-Lerncoach</h3>
-    <p class="small">Die lokale Analyse funktioniert immer. Wenn der sichere KI-Server verbunden ist, kann die KI auch sinngemäss formulierte Antworten beurteilen.</p>
+    <p class="small">Der intelligente Offline-Check funktioniert ohne Konto und ohne laufende Kosten. Er erkennt Wortformen und bekannte Synonyme und vergibt Teilpunkte.</p>
     <textarea id="studentAnswer" placeholder="Schreibe deine Antwort in eigenen Worten..."></textarea>
-    <button onclick="checkAIAnswer()">Antwort mit KI beurteilen</button>
-    <button onclick="checkLocalAnswer()">Offline vergleichen</button>
+    <button onclick="checkAIAnswer()">Antwort intelligent vergleichen</button>
+    <button onclick="checkLocalAnswer()">Intelligent vergleichen</button>
     <button onclick="explainCurrentCard()">Erklärung vereinfachen (offline)</button>
     <div id="coachResult" class="small" style="margin-top:10px"></div>
   </div>
@@ -464,29 +464,58 @@ async function checkAIAnswer() {
   } finally { if (btn) btn.disabled = false; }
 }
 
-// Offline Lerncoach: einfache Wort-/Schlüsselbegriff-Analyse, ohne externe KI/API.
+// Intelligenter Offline-Vergleich: Konzepte, Wortformen, Synonyme und Teilpunkte.
+const SMART_SYNONYMS = [
+  ['pflanze','gewachs','gewächs'], ['tier','lebewesen','organismus'],
+  ['grund','ursache','ausloser','auslöser'], ['folge','wirkung','konsequenz','resultat'],
+  ['erklart','erklärt','beschreibt','bedeutet','definiert'], ['verandert','verändert','wandelt','umwandelt'],
+  ['herstellen','produzieren','bilden','erzeugen'], ['aufnehmen','absorbieren','einnehmen'],
+  ['abgeben','freisetzen','ausstossen','ausstoßen'], ['schnell','rasch'], ['langsam','gemach'],
+  ['wichtig','wesentlich','entscheidend'], ['beginnt','startet','fangt','fängt'],
+  ['endet','hort','hört','schliesst','schließt'], ['streit','konflikt','auseinandersetzung'],
+  ['erzahler','erzähler','narrator'], ['gedicht','lyrik','vers'], ['theater','drama','schauspiel'],
+  ['vergleichen','ahnlich','ähnlich','gemeinsamkeit'], ['unterschied','anders','gegensatz'],
+  ['wasser','h2o'], ['kohlendioxid','co2'], ['sauerstoff','o2'],
+  ['vergangenheit','fruher','früher','damals'], ['zukunft','spater','später']
+];
 function normalizeText(s) {
-  return String(s || '').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9äöüß]+/g,' ').trim();
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]+/g,' ').trim();
+}
+function stemWord(w) {
+  return w.replace(/(ungen|ung|lichkeit|keiten|keit|heiten|heit|isch|lich|chen|lein|ern|em|er|en|es|e|s)$/,'');
+}
+function conceptKey(w) {
+  const found=SMART_SYNONYMS.find(group=>group.some(x=>normalizeText(x)===w));
+  return found ? normalizeText(found[0]) : stemWord(w);
 }
 function answerTokens(s) {
-  const stop = new Set(['und','oder','der','die','das','ein','eine','einer','eines','ist','sind','war','wird','werden','von','zu','im','in','am','an','auf','mit','für','als','bei','den','dem','des','the','and','a','an','of','to','is','are','was','were','be','by','for','in','on']);
-  return normalizeText(s).split(/\\s+/).filter(w => w.length > 2 && !stop.has(w));
+  const stop=new Set(['und','oder','der','die','das','ein','eine','einer','eines','ist','sind','war','wird','werden','von','zu','im','in','am','an','auf','mit','fur','als','bei','den','dem','des','the','and','for','with','that','this','which','was','were','are']);
+  return normalizeText(s).split(/\s+/).filter(w=>w.length>2&&!stop.has(w)).map(conceptKey);
 }
 function checkLocalAnswer() {
-  if (!cards.length) { document.getElementById('coachResult').textContent = 'Erstelle zuerst Lernkarten.'; return; }
-  const given = document.getElementById('studentAnswer').value.trim();
-  if (!given) { document.getElementById('coachResult').textContent = 'Schreibe zuerst deine Antwort.'; return; }
-  const expected = cards[index].answer;
-  const a = answerTokens(expected), b = new Set(answerTokens(given));
-  const matched = [...new Set(a)].filter(w => b.has(w));
-  const coverage = a.length ? Math.round(matched.length / new Set(a).size * 100) : 0;
-  let verdict = coverage >= 70 ? 'Sehr gut – du hast viele wichtige Begriffe getroffen.' : coverage >= 40 ? 'Teilweise richtig – ein paar wichtige Punkte fehlen noch.' : 'Noch nicht ganz – vergleiche deine Antwort mit der Lösung und versuche es erneut.';
-  document.getElementById('coachResult').innerHTML = '';
-  const title = document.createElement('strong'); title.textContent = verdict;
-  const score = document.createElement('p'); score.textContent = 'Schlüsselbegriffe erkannt: ' + coverage + '% (' + matched.length + ' von ' + new Set(a).size + ').';
-  const miss = document.createElement('p'); miss.textContent = 'Noch fehlende Schlüsselbegriffe: ' + [...new Set(a)].filter(w => !b.has(w)).slice(0,10).join(', ') || 'Keine offensichtlichen fehlenden Begriffe.';
-  const note = document.createElement('p'); note.textContent = 'Automatischer Vergleich ist nur ein grober Hinweis und kann richtige Formulierungen übersehen.';
-  document.getElementById('coachResult').append(title,score,miss,note);
+  const out=document.getElementById('coachResult');
+  if(!cards.length){out.textContent='Erstelle zuerst Lernkarten.';return;}
+  const given=document.getElementById('studentAnswer').value.trim();
+  if(!given){out.textContent='Schreibe zuerst deine Antwort.';return;}
+  const expected=String(cards[index].answer||'');
+  const wanted=[...new Set(answerTokens(expected))], supplied=new Set(answerTokens(given));
+  if(!wanted.length){out.textContent='Die Musterlösung ist zu kurz für einen zuverlässigen Vergleich.';return;}
+  const matched=wanted.filter(x=>supplied.has(x));
+  const missing=wanted.filter(x=>!supplied.has(x));
+  let score=Math.round(matched.length/wanted.length*100);
+  const negations=['nicht','kein','keine','keinen','nie','niemals','ohne'];
+  const hasNegation=negations.some(x=>normalizeText(given).split(' ').includes(x));
+  const expectedNegation=negations.some(x=>normalizeText(expected).split(' ').includes(x));
+  if(hasNegation!==expectedNegation) score=Math.max(0,score-15);
+  const verdict=score>=85?'Sehr gut – die wichtigsten Inhalte stimmen.':score>=60?'Grösstenteils richtig – einige Punkte fehlen.':score>=35?'Teilweise richtig – du hast einen Teil verstanden.':'Noch nicht ausreichend – schau dir die fehlenden Inhalte an.';
+  out.replaceChildren();
+  const title=document.createElement('strong');title.textContent=score+'/100 Punkte – '+verdict;
+  const detail=document.createElement('p');detail.textContent='Erkannte Inhaltspunkte: '+matched.length+' von '+wanted.length+'.';
+  const miss=document.createElement('p');miss.textContent='Noch nicht erkannt: '+(missing.slice(0,12).join(', ')||'Keine wichtigen Schlüsselbegriffe.');
+  const note=document.createElement('p');note.className='small';note.textContent='Der Offline-Check erkennt Wortformen und einige Synonyme. Er versteht Bedeutungen nicht so zuverlässig wie ein echtes KI-Modell. Prüfe die Bewertung bei kniffligen Antworten.';
+  out.append(title,detail,miss,note);
 }
 function explainCurrentCard() {
   if (!cards.length) { document.getElementById('coachResult').textContent = 'Erstelle zuerst Lernkarten.'; return; }
