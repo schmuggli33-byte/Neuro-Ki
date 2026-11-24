@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NEURO LEARN</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+
+
+<style>
+:root {
+  --bg:#0e1116; --surface:#161b22; --surface2:#1b212c; --border:#2a3140;
+  --text:#e6e9ef; --muted:#8b93a5; --accent:#4c7df0; --accent-hover:#6890f3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--bg); }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px; line-height: 1.55;
+  background: var(--bg); color: var(--text);
+}
+header { padding: 22px 28px 18px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.logo { font-size: 15px; font-weight: 700; letter-spacing: .22em; color: var(--text); }
+header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+header { position: relative; }
+.langsw { position: absolute; right: 20px; top: 20px; display: flex; gap: 4px; }
+.langsw button { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+main { max-width: 1120px; margin: auto; padding: 24px 20px 48px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: start; }
+
+nav { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: 16px; display: flex; flex-direction: column; gap: 2px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+nav button {
+  display: block; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 8px 8px 0;
+  color: var(--muted); padding: 11px 16px; font-weight: 600; font-size: 14px;
+}
+nav button:hover { background: var(--surface2); color: var(--text); }
+nav button.active { background: var(--surface2); color: var(--text); border-left-color: var(--accent); }
+@media (max-width: 640px) {
+  main { grid-template-columns: 1fr; }
+  nav { grid-row: auto; position: static; flex-direction: row; overflow-x: auto; }
+  nav button { width: auto; white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; }
+  nav button.active { border-bottom-color: var(--accent); }
+  .panel { grid-column: 1 !important; grid-row: auto !important; }
+}
+
+button {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;
+  font-family: inherit; transition: background .15s, border-color .15s, color .15s;
+}
+button:hover { background: #232b3a; border-color: #3a4358; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: wait; }
+button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.panel { grid-column: 2; grid-row: 1; display: none; background: var(--surface); padding: 28px; border-radius: 12px; border: 1px solid var(--border); }
+.panel.active { display: block; animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .panel.active { animation: none; } }
+
+h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; color: var(--text); }
+h3 { margin: 26px 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+p { color: #c3c9d6; }
+
+input, textarea, select {
+  width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; margin: 8px 0; font-family: inherit; font-size: 15px;
+}
+textarea { min-height: 130px; resize: vertical; }
+
+.action { background: var(--accent); border-color: var(--accent); color: #fff; width: 100%; margin-top: 10px; }
+.action:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 14px 0; text-align: left; }
+.card h3 { margin-top: 0; }
+#question { font-size: 20px; font-weight: 500; line-height: 1.4; margin: 0 0 8px; }
+.small { color: var(--muted); font-size: 13px; }
+
+#points { font-size: 42px; margin: 0; font-weight: 600; }
+#progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+#bar { height: 100%; width: 0%; background: var(--accent); transition: width .4s ease; }
+
+#toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 2000; max-width: min(92vw, 420px); padding: 12px 18px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
+
+<header>
+  <div class="logo">NEURO LEARN</div>
+  <div class="langsw"><button id="langDe" onclick="setLang('de')">DE</button><button id="langEn" onclick="setLang('en')">EN</button></div>
+  <p>Dein persönlicher Lernassistent</p>
+</header>
+
+<main>
+
+<nav>
+  <button class="active" onclick="showTab('home',this)">Start</button>
+  <button onclick="showTab('scan',this)">Bild scannen</button>
+  <button onclick="showTab('quiz',this)">Abfragen</button>
+  <button onclick="showTab('vocab',this)">Vokabeln</button>
+  <button onclick="showTab('stats',this); renderStats()">Fortschritt</button>
+  <button onclick="showTab('library',this); renderLibrary()">Bibliothek</button>
+</nav>
+
+<section id="home" class="panel active">
+  <h2>Willkommen zurück!</h2>
+  <p>Was möchtest du heute lernen?</p>
+
+  <div class="card">
+    <h3>Lernstoff erkennen</h3>
+    Lade ein Foto deiner Schulunterlagen hoch.
+  </div>
+
+  <div class="card">
+    <h3>Wissen testen</h3>
+    Lass dich zu deinem Lernstoff abfragen.
+  </div>
+
+  <div class="card">
+    <h3>Vokabeln lernen</h3>
+    Trainiere deine Fremdsprachen.
+  </div>
+
+  <button class="action" onclick="showTab('scan',document.querySelectorAll('nav button')[1])">
+    Jetzt lernen
+  </button>
+</section>
+
+<section id="scan" class="panel">
+  <h2>Bilderkennung</h2>
+  <p>Lade ein Foto deiner Lernunterlagen hoch. Der Text wird direkt in deinem Browser erkannt, das Foto verlässt dein Gerät nicht.</p>
+
+  <input type="file" id="imageInput" accept="image/*">
+
+  <label class="small" for="ocrLang">Sprache der Unterlagen</label>
+  <select id="ocrLang">
+    <option value="deu+eng" selected>Deutsch und Englisch</option>
+    <option value="deu">Deutsch</option>
+    <option value="eng">Englisch</option>
+    <option value="fra">Französisch</option>
+    <option value="spa">Spanisch</option>
+    <option value="ita">Italienisch</option>
+    <option value="lat">Latein</option>
+  </select>
+
+  <button class="action" id="scanBtn" onclick="scanImage()">Bild erkennen</button>
+  <p id="scanStatus" class="small"></p>
+
+  <h3>Erkannter Lernstoff</h3>
+  <p class="small">Prüfe den Text und korrigiere Fehler. Pro Zeile eine Karte im Format „Begriff: Erklärung“.</p>
+  <textarea id="recognized" placeholder="Hier erscheint dein erkannter Text (oder füge Text selbst ein)..."></textarea>
+
+  <input id="topicInput" placeholder="Thema (optional, z. B. Photosynthese)">
+
+  <button class="action" onclick="createCards()">Lernkarten erstellen</button>
+</section>
+
+<section id="quiz" class="panel">
+  <h2>Lernmodus</h2>
+
+  <p id="quizCounter" class="small"></p>
+
+  <div class="card">
+    <h3 id="question">Noch keine Lernkarten vorhanden.</h3>
+    <div id="answerArea"></div>
+  </div>
+
+  <div id="feedback" class="card hidden" style="text-align:left"></div>
+
+  <div class="card" id="coachCard">
+    <h3 style="margin-top:0">KI-Lerncoach</h3>
+    <p class="small">Die lokale Analyse funktioniert immer. Wenn der sichere KI-Server verbunden ist, kann die KI auch sinngemäss formulierte Antworten beurteilen.</p>
+    <textarea id="studentAnswer" placeholder="Schreibe deine Antwort in eigenen Worten..."></textarea>
+    <button onclick="checkAIAnswer()">Antwort mit KI beurteilen</button>
+    <button onclick="checkLocalAnswer()">Offline vergleichen</button>
+    <button onclick="explainCurrentCard()">Erklärung vereinfachen (offline)</button>
+    <div id="coachResult" class="small" style="margin-top:10px"></div>
+  </div>
+
+
+  <button class="action" id="showAnswer" onclick="revealAnswer()">
+    Antwort anzeigen
+  </button>
+
+  <div id="rating" class="hidden">
+    <p>Wie gut konntest du die Antwort?</p>
+    <button onclick="nextQuestion(true)">Gewusst </button>
+    <button onclick="nextQuestion(false)">Noch nicht </button>
+    <button onclick="startAdaptivePractice()">Adaptives Training starten</button>
+  </div>
+</section>
+
+<section id="vocab" class="panel">
+  <h2>Vokabeltrainer</h2>
+
+  <h3>Vokabelseite scannen</h3>
+  <p class="small">Fotografiere eine Vokabelliste. Der Text wird im Browser erkannt. Danach prüfst du die Liste und übernimmst sie.</p>
+  <input type="file" id="vocabImage" accept="image/*">
+  <label class="small" for="vocabOcrLang">Fremdsprache</label>
+  <select id="vocabOcrLang">
+    <option value="fra" selected>Französisch</option>
+    <option value="eng">Englisch</option>
+    <option value="spa">Spanisch</option>
+    <option value="ita">Italienisch</option>
+    <option value="lat">Latein</option>
+  </select>
+  <button class="action" id="vocabScanBtn" onclick="scanVocabPage()">Vokabeln aus Foto erkennen</button>
+  <p id="vocabScanStatus" class="small"></p>
+  <div id="vocabImport" class="hidden">
+    <p class="small">Prüfe die Liste. Pro Zeile ein Paar im Format „Wort = Übersetzung“.</p>
+    <textarea id="vocabImportText"></textarea>
+    <label class="small" for="vocabOrder">Spalte links</label>
+    <select id="vocabOrder">
+      <option value="fw" selected>Fremdsprache links, Deutsch rechts</option>
+      <option value="wf">Deutsch links, Fremdsprache rechts</option>
+    </select>
+    <button class="action" onclick="importVocab()">Vokabeln übernehmen</button>
+  </div>
+
+  <h3>Einzelne Vokabel hinzufügen</h3>
+  <input id="word" placeholder="Vokabel (z.B. maison)">
+  <input id="translation" placeholder="Übersetzung (z.B. Haus)">
+  <input id="wordLang" placeholder="Sprache (z.B. Französisch)">
+
+  <button class="action" onclick="addVocab()">Vokabel hinzufügen</button>
+
+  <h3>Training</h3>
+  <label class="small" for="vocabDir">Richtung</label>
+  <select id="vocabDir" onchange="updateVocab()">
+    <option value="fw" selected>Fremdsprache → Deutsch</option>
+    <option value="wf">Deutsch → Fremdsprache</option>
+    <option value="mix">Gemischt</option>
+  </select>
+  <label class="small" for="vocabLang">Sprache</label>
+  <select id="vocabLang" onchange="vocabFilterChanged()">
+    <option value="">Alle Sprachen</option>
+  </select>
+
+  <div class="card">
+    <h3 id="vocabQuestion">Deine Vokabeln erscheinen hier.</h3>
+    <p id="vocabAnswer"></p>
+    <p class="small">Tippe auf die Karte, um die Antwort zu zeigen.</p>
+  </div>
+
+  <button onclick="nextVocab()">Nächste Vokabel</button>
+  <button onclick="showVocabAnswer()">Übersetzung zeigen</button>
+
+  <div id="vocabEdit" class="card hidden">
+    <input id="editWord" placeholder="Vokabel">
+    <input id="editTrans" placeholder="Übersetzung">
+    <button class="action" onclick="saveVocabEdit()">Änderung speichern</button>
+    <button onclick="cancelVocabEdit()">Abbrechen</button>
+  </div>
+
+  <div id="vocabRating" class="hidden" style="margin-top:12px">
+    <p class="small">Hast du es gewusst?</p>
+    <button onclick="rateVocab(true)">Gewusst</button>
+    <button onclick="rateVocab(false)">Nicht gewusst</button>
+  </div>
+
+  <button class="action" onclick="practiceVocabErrors()">Fehler wiederholen</button>
+
+  <p id="vocabCount" class="small"></p>
+
+  <h3>Alle Vokabeln</h3>
+  <input id="vocabSearch" placeholder="Suchen (Wort oder Übersetzung)..." oninput="renderVocabList()">
+  <div id="vocabList"></div>
+  <button id="vocabDelAll" class="hidden" onclick="deleteShownVocab(this)">Alle angezeigten löschen</button>
+</section>
+
+<section id="stats" class="panel">
+  <h2>Dein Lernfortschritt</h2>
+
+  <div class="card">
+    <h1 id="points">0</h1>
+    <p>Lernpunkte</p>
+  </div>
+
+  <p>Richtig beantwortete Fragen</p>
+  <h3 id="correct">0</h3>
+
+  <p>Dein Fortschritt</p>
+  <div id="progress"><div id="bar"></div></div>
+  <p id="percentage">0 %</p>
+
+  <h3>Fortschritt pro Thema</h3>
+  <div id="topicStats"></div>
+
+  <h3>Deine Schwächen</h3>
+  <div id="weakList"></div>
+  <button class="action" onclick="practiceWeak()">Schwächen gezielt üben</button>
+
+  <h3>Wiederholungsplan</h3>
+  <div id="planInfo"></div>
+  <button class="action" onclick="practiceDue()">Fällige Karten jetzt üben</button>
+</section>
+
+<section id="library" class="panel">
+  <h2>Bibliothek</h2>
+  <p class="small" id="libMode"></p>
+
+  <div id="libCrumbs" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0"></div>
+
+  <h3>Ordner hier erstellen</h3>
+  <input id="folderName" placeholder="Name des neuen Ordners (z.B. Französisch)">
+  <button class="action" onclick="createFolder()">Ordner erstellen</button>
+  <p id="libStatus" class="small"></p>
+
+  <h3>Inhalt dieses Ordners</h3>
+  <div id="libContent" class="card"></div>
+
+  <h3>Unterordner</h3>
+  <div id="folderList"></div>
+</section>
+
+</main>
+
+<script>
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+let cards = JSON.parse(lsGet("cards") || "[]");
+let vocab = JSON.parse(lsGet("vocab") || "[]");
+
+let index = 0;
+let vocabIndex = 0;
+let vFlip = false;
+let points = Number(lsGet("points") || 0);
+let correct = Number(lsGet("correct") || 0);
+let total = Number(lsGet("total") || 0);
+
+function save() {
+  lsSet("cards", JSON.stringify(cards));
+  lsSet("vocab", JSON.stringify(vocab));
+  lsSet("points", points);
+  lsSet("correct", correct);
+  lsSet("total", total);
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+function createCards() {
+  const text = document.getElementById("recognized").value;
+  const topic = document.getElementById("topicInput").value.trim().slice(0, 60);
+
+  if (!text.trim()) {
+    alert("Kein Lernstoff vorhanden!");
+    return;
+  }
+
+  const lines = text.split("\n").filter(x => x.trim().length > 2);
+  let added = 0;
+
+  lines.forEach(line => {
+    const match = line.match(/^(.{2,80}?)(?::|=|\t| – | - )(.+)$/);
+
+    if (match && match[2].trim()) {
+      cards.push({
+        question: "Was bedeutet: " + match[1].trim() + "?",
+        answer: match[2].trim(),
+        topic: topic || "Ohne Thema"
+      });
+      added++;
+    }
+  });
+
+  if (added === 0) {
+    alert("Keine eindeutigen Begriff-Erklärung-Paare gefunden. Schreibe pro Zeile „Begriff: Erklärung“.");
+    return;
+  }
+
+  save();
+  index = cards.length - added;
+  studyQueue = null;
+  alert(added + " Lernkarten erstellt!");
+  updateQuiz();
+  showTab("quiz", document.querySelectorAll("nav button")[2]);
+}
+
+function updateQuiz() {
+  const has = cards.length > 0;
+  document.getElementById("answerArea").textContent = "";
+  document.getElementById("feedback").classList.add("hidden");
+  document.getElementById("rating").classList.add("hidden");
+  const coachInput = document.getElementById("studentAnswer"); if (coachInput) coachInput.value = "";
+  const coachOut = document.getElementById("coachResult"); if (coachOut) coachOut.textContent = "";
+  document.getElementById("showAnswer").classList.toggle("hidden", !has);
+
+  if (!has) {
+    document.getElementById("question").textContent = "Noch keine Lernkarten vorhanden.";
+    document.getElementById("quizCounter").textContent = "";
+    return;
+  }
+
+  index = index % cards.length;
+  document.getElementById("question").textContent = cards[index].question;
+  document.getElementById("quizCounter").textContent = "Frage " + (index + 1) + " von " + cards.length;
+}
+
+function revealAnswer() {
+  if (!cards.length) return;
+
+  document.getElementById("answerArea").textContent =
+    cards[index].answer;
+
+  document.getElementById("rating").classList.remove("hidden");
+  document.getElementById("showAnswer").classList.add("hidden");
+}
+
+function nextQuestion(known) {
+  record(cards[index], known);
+  total++;
+
+  if (known) {
+    points += 10;
+    correct++;
+  }
+
+  save();
+  updateStats();
+
+  advance();
+}
+
+// Echte KI-Bewertung über einen eigenen Server. Der API-Schlüssel bleibt serverseitig.
+async function checkAIAnswer() {
+  const result = document.getElementById('coachResult');
+  if (!cards.length) { result.textContent = 'Erstelle zuerst Lernkarten.'; return; }
+  const student = document.getElementById('studentAnswer').value.trim();
+  if (!student) { result.textContent = 'Schreibe zuerst deine Antwort.'; return; }
+  const card = cards[index];
+  result.textContent = 'Die KI beurteilt deine Antwort...';
+  const btn = document.querySelector('#coachCard button');
+  if (btn) btn.disabled = true;
+  try {
+    const response = await fetch('/api/ai', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: 'grade', question: String(card.question || ''), expectedAnswer: String(card.answer || ''), studentAnswer: student })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'KI-Server nicht erreichbar.');
+    result.replaceChildren();
+    const heading = document.createElement('strong');
+    heading.textContent = `${data.score}/100 Punkte – ${data.verdict || 'Bewertung'}`;
+    const explanation = document.createElement('p'); explanation.textContent = data.feedback || '';
+    const missing = document.createElement('p'); missing.textContent = 'Was noch fehlt: ' + (data.missing || 'Nichts Wesentliches.');
+    const correct = document.createElement('p'); correct.textContent = 'Verbesserungsvorschlag: ' + (data.improvement || 'Deine Antwort ist ausreichend.');
+    const caveat = document.createElement('p'); caveat.className = 'small'; caveat.textContent = 'KI-Bewertungen können Fehler enthalten. Bei wichtigen Prüfungen bitte mit deinen Unterlagen vergleichen.';
+    result.append(heading, explanation, missing, correct, caveat);
+  } catch (err) {
+    result.textContent = 'KI-Bewertung nicht möglich: ' + err.message + ' Du kannst stattdessen „Offline vergleichen“ verwenden.';
+  } finally { if (btn) btn.disabled = false; }
+}
+
+// Offline Lerncoach: einfache Wort-/Schlüsselbegriff-Analyse, ohne externe KI/API.
+function normalizeText(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9äöüß]+/g,' ').trim();
+}
+function answerTokens(s) {
+  const stop = new Set(['und','oder','der','die','das','ein','eine','einer','eines','ist','sind','war','wird','werden','von','zu','im','in','am','an','auf','mit','für','als','bei','den','dem','des','the','and','a','an','of','to','is','are','was','were','be','by','for','in','on']);
+  return normalizeText(s).split(/\\s+/).filter(w => w.length > 2 && !stop.has(w));
+}
+function checkLocalAnswer() {
+  if (!cards.length) { document.getElementById('coachResult').textContent = 'Erstelle zuerst Lernkarten.'; return; }
+  const given = document.getElementById('studentAnswer').value.trim();
+  if (!given) { document.getElementById('coachResult').textContent = 'Schreibe zuerst deine Antwort.'; return; }
+  const expected = cards[index].answer;
+  const a = answerTokens(expected), b = new Set(answerTokens(given));
+  const matched = [...new Set(a)].filter(w => b.has(w));
+  const coverage = a.length ? Math.round(matched.length / new Set(a).size * 100) : 0;
+  let verdict = coverage >= 70 ? 'Sehr gut – du hast viele wichtige Begriffe getroffen.' : coverage >= 40 ? 'Teilweise richtig – ein paar wichtige Punkte fehlen noch.' : 'Noch nicht ganz – vergleiche deine Antwort mit der Lösung und versuche es erneut.';
+  document.getElementById('coachResult').innerHTML = '';
+  const title = document.createElement('strong'); title.textContent = verdict;
+  const score = document.createElement('p'); score.textContent = 'Schlüsselbegriffe erkannt: ' + coverage + '% (' + matched.length + ' von ' + new Set(a).size + ').';
+  const miss = document.createElement('p'); miss.textContent = 'Noch fehlende Schlüsselbegriffe: ' + [...new Set(a)].filter(w => !b.has(w)).slice(0,10).join(', ') || 'Keine offensichtlichen fehlenden Begriffe.';
+  const note = document.createElement('p'); note.textContent = 'Automatischer Vergleich ist nur ein grober Hinweis und kann richtige Formulierungen übersehen.';
+  document.getElementById('coachResult').append(title,score,miss,note);
+}
+function explainCurrentCard() {
+  if (!cards.length) { document.getElementById('coachResult').textContent = 'Erstelle zuerst Lernkarten.'; return; }
+  const answer = String(cards[index].answer || '').trim();
+  const words = answer.split(/(?<=[.!?])\\s+|[,;:]\\s+/).filter(x => x.trim());
+  const result = document.getElementById('coachResult');
+  result.replaceChildren();
+  const heading = document.createElement('strong'); heading.textContent = 'Einfacher erklärt (offline):'; result.appendChild(heading);
+  const chunks = words.length > 1 ? words : answer.split(/\\s+/).reduce((arr,w,i) => { const chunk=Math.floor(i/12); arr[chunk]=(arr[chunk]||'')+' '+w; return arr; },[]);
+  chunks.slice(0,6).forEach((chunk,i) => { const p=document.createElement('p'); p.textContent=(i+1)+'. '+String(chunk).trim(); result.appendChild(p); });
+  const tip=document.createElement('p'); tip.textContent='Merke dir die wichtigsten Wörter und erkläre den Inhalt anschließend selbst. Für echte KI-Erklärungen braucht die App einen sicheren Server/API-Anschluss.'; result.appendChild(tip);
+}
+function startAdaptivePractice() {
+  const list = cards.slice().sort((a,b) => ((b.wrong||0)/(b.seen||1))-((a.wrong||0)/(a.seen||1)) || (a.seen||0)-(b.seen||0));
+  if (!list.length) { alert('Erstelle zuerst Lernkarten.'); return; }
+  startQueue(list, 'Adaptives Training – schwierige Karten zuerst');
+}
+
+function addVocab() {
+  const word = document.getElementById("word").value.trim();
+  const translation = document.getElementById("translation").value.trim();
+
+  if (!word || !translation) {
+    alert("Bitte beide Felder ausfüllen!");
+    return;
+  }
+
+  vocab.push({word, translation, lang: (document.getElementById("wordLang").value || "").trim()});
+  document.getElementById("word").value = "";
+  document.getElementById("translation").value = "";
+
+  save();
+  updateVocab();
+}
+
+function updateVocab() {
+  if (!vocab.length) {
+    document.getElementById("vocabQuestion").textContent =
+      "Noch keine Vokabeln vorhanden.";
+    if (typeof renderVocabList === "function") renderVocabList();
+    document.getElementById("vocabAnswer").textContent = "";
+    return;
+  }
+
+  vocabIndex = vocabIndex % vocab.length;
+  vFlip = typeof pickFlip === "function" ? pickFlip() : false;
+  if (typeof refreshLangs === "function") refreshLangs();
+  if (typeof renderVocabList === "function") renderVocabList();
+  document.getElementById("vocabQuestion").textContent =
+    (vFlip ? vocab[vocabIndex].translation : vocab[vocabIndex].word);
+
+  document.getElementById("vocabAnswer").textContent = "";
+  document.getElementById("vocabCount").textContent =
+    vocab.length + " Vokabeln gespeichert" + (typeof vocabOpen === "function" ? ", " + vocabOpen().length + " zum Wiederholen" : "") + ".";
+  document.getElementById("vocabRating").classList.add("hidden");
+  document.getElementById("vocabEdit").classList.add("hidden");
+}
+
+function nextVocab() {
+  if (!vocab.length) return;
+  advanceVocab();
+}
+
+function showVocabAnswer() {
+  if (!vocab.length) return;
+
+  document.getElementById("vocabAnswer").textContent =
+    (vFlip ? vocab[vocabIndex].word : vocab[vocabIndex].translation);
+  document.getElementById("vocabRating").classList.remove("hidden");
+}
+
+function updateStats() {
+  document.getElementById("points").textContent = points;
+  document.getElementById("correct").textContent = correct;
+
+  const percent = total ? Math.round(correct / total * 100) : 0;
+
+  document.getElementById("percentage").textContent = percent + " %";
+  document.getElementById("bar").style.width = percent + "%";
+  if (typeof renderStats === "function") renderStats();
+}
+
+updateQuiz();
+updateVocab();
+updateStats();
+</script>
+
+
+
+<script>
+async function prepImage(file) {
+  const bmp = await createImageBitmap(file);
+  const big = Math.max(bmp.width, bmp.height);
+  const sc = big > 2200 ? 2200 / big : big < 1000 ? 2 : 1;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(bmp.width * sc));
+  c.height = Math.max(1, Math.round(bmp.height * sc));
+  const ctx = c.getContext("2d");
+  ctx.drawImage(bmp, 0, 0, c.width, c.height);
+  const im = ctx.getImageData(0, 0, c.width, c.height);
+  const d = im.data;
+  let lo = 255, hi = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const g = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
+    d[i] = d[i + 1] = d[i + 2] = g;
+    if (g < lo) lo = g;
+    if (g > hi) hi = g;
+  }
+  const span = Math.max(1, hi - lo);
+  for (let i = 0; i < d.length; i += 4) {
+    const v = ((d[i] - lo) * 255 / span) | 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  ctx.putImageData(im, 0, 0);
+  return c;
+}
+
+async function ocrFile(file, lang, st) {
+  if (!window.Tesseract) { st.textContent = "Die Texterkennung konnte nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu."; return ""; }
+  st.textContent = "Bild wird vorbereitet...";
+  try {
+    const canvas = await prepImage(file);
+    const r = await Tesseract.recognize(canvas, lang, {
+      logger: m => {
+        if (m.status === "recognizing text") st.textContent = "Text wird erkannt... " + Math.round((m.progress || 0) * 100) + " %";
+        else if (/load|initializ/.test(m.status || "")) st.textContent = "Sprachdaten werden geladen (nur beim ersten Mal)...";
+      }
+    });
+    const text = ((r && r.data && r.data.text) || "").trim();
+    if (!text) st.textContent = "Es wurde kein Text erkannt. Versuche ein schärferes, gerades und gut beleuchtetes Foto.";
+    return text;
+  } catch (e) {
+    st.textContent = "Fehler bei der Bilderkennung. Bitte versuche es mit einem anderen Foto.";
+    return "";
+  }
+}
+
+async function scanImage() {
+  const file = document.getElementById("imageInput").files[0];
+  const st = document.getElementById("scanStatus");
+  const btn = document.getElementById("scanBtn");
+  if (!file) { st.textContent = "Bitte zuerst ein Bild auswählen."; return; }
+  btn.disabled = true;
+  try {
+    const text = await ocrFile(file, document.getElementById("ocrLang").value, st);
+    if (!text) return;
+    document.getElementById("recognized").value = text;
+    st.textContent = "Erkennung abgeschlossen. Bitte prüfe den Text und korrigiere Fehler, bevor du Karten erstellst.";
+  } finally { btn.disabled = false; }
+}
+
+function parseVocabLine(line) {
+  const m = String(line).replace(/[|¦]+/g, "  ").trim().match(/^(.{1,60}?)\s*(?:=|:|\t|–|—|\s-\s|\s{2,})\s*(.+)$/);
+  if (!m) return null;
+  const a = m[1].trim(), b = m[2].trim();
+  return a && b ? [a, b] : null;
+}
+
+async function scanVocabPage() {
+  const file = document.getElementById("vocabImage").files[0];
+  const st = document.getElementById("vocabScanStatus");
+  const btn = document.getElementById("vocabScanBtn");
+  if (!file) { st.textContent = "Bitte zuerst ein Foto auswählen."; return; }
+  btn.disabled = true;
+  try {
+    const text = await ocrFile(file, document.getElementById("vocabOcrLang").value + "+deu", st);
+    if (!text) return;
+    const lines = text.split("\n").map(x => x.trim()).filter(x => x.length > 2).map(l => {
+      const p = parseVocabLine(l);
+      return p ? p[0] + " = " + p[1] : l;
+    });
+    document.getElementById("vocabImportText").value = lines.join("\n");
+    document.getElementById("vocabImport").classList.remove("hidden");
+    st.textContent = "Erkennung abgeschlossen. Prüfe die Liste und korrigiere Fehler, bevor du die Vokabeln übernimmst.";
+  } finally { btn.disabled = false; }
+}
+
+function importVocab() {
+  const sel = document.getElementById("vocabOcrLang");
+  const lang = sel.options[sel.selectedIndex].text;
+  const swap = document.getElementById("vocabOrder").value === "wf";
+  const st = document.getElementById("vocabScanStatus");
+  const key = v => (v.word + "|" + v.translation).toLowerCase();
+  const have = new Set(vocab.map(key));
+  let added = 0, skipped = 0;
+  document.getElementById("vocabImportText").value.split("\n").forEach(line => {
+    if (!line.trim()) return;
+    const p = parseVocabLine(line);
+    if (!p) { skipped++; return; }
+    const v = { word: swap ? p[1] : p[0], translation: swap ? p[0] : p[1], lang: lang };
+    if (have.has(key(v))) return;
+    have.add(key(v));
+    vocab.push(v);
+    added++;
+  });
+  if (!added) { st.textContent = "Es wurden keine neuen Vokabeln übernommen. Schreibe pro Zeile „Wort = Übersetzung“."; return; }
+  vocabQueue = null;
+  vocabIndex = vocab.length - added;
+  save();
+  updateVocab();
+  document.getElementById("vocabImportText").value = "";
+  document.getElementById("vocabImport").classList.add("hidden");
+  st.textContent = added + " Vokabeln übernommen" + (skipped ? ", " + skipped + " Zeilen ohne Trennzeichen übersprungen" : "") + ".";
+}
+
+function showFeedback(parts) {
+  const fb = document.getElementById("feedback");
+  fb.replaceChildren();
+  parts.forEach(([text, head]) => {
+    const el = document.createElement(head ? "h3" : "p");
+    el.textContent = text;
+    fb.appendChild(el);
+  });
+  fb.classList.remove("hidden");
+  return fb;
+}
+
+let recent = (() => { try { return JSON.parse(lsGet("recent") || "[]"); } catch (e) { return []; } })();
+
+function record(c, ok) {
+  if (!c) return;
+  c.seen = (c.seen || 0) + 1;
+  if (!ok) c.wrong = (c.wrong || 0) + 1;
+  c.streak = ok ? (c.streak || 0) + 1 : 0;
+  if (!ok && studyQueue && studyQueue.indexOf(c) < 0) studyQueue.push(c);
+  c.box = ok ? Math.min((c.box || 0) + 1, 5) : 0;
+  c.due = Date.now() + [10, 1440, 2880, 5760, 11520, 23040][c.box] * 60000;
+  recent.push(ok ? 1 : 0);
+  recent = recent.slice(-10);
+  lsSet("recent", JSON.stringify(recent));
+  save();
+}
+
+async function getStore() { return null; }
+
+let libCur = "";
+let libAll = [];
+
+async function libList() {
+  const st = await getStore();
+  if (st) {
+    const snap = await st.col.get();
+    return snap.docs.filter(d => d.id.indexOf("folder_") === 0).map(d => {
+      const x = d.data() || {};
+      let cs = [], vs = [];
+      try { cs = JSON.parse(x.cards || "[]"); } catch (e) {}
+      try { vs = JSON.parse(x.vocab || "[]"); } catch (e) {}
+      return { id: d.id, name: String(x.name || "Ordner"), parent: String(x.parent || ""), cards: cs, vocab: vs };
+    });
+  }
+  try { return JSON.parse(lsGet("folders") || "[]"); } catch (e) { return []; }
+}
+
+async function libPut(f) {
+  const st = await getStore();
+  if (st) {
+    await st.col.doc(f.id).set({
+      name: f.name, parent: f.parent || "",
+      cards: JSON.stringify(f.cards || []), vocab: JSON.stringify(f.vocab || []), updated: Date.now()
+    });
+    return;
+  }
+  const all = await libList();
+  const i = all.findIndex(x => x.id === f.id);
+  if (i >= 0) all[i] = f; else all.push(f);
+  lsSet("folders", JSON.stringify(all));
+}
+
+async function libDel(id) {
+  const st = await getStore();
+  if (st) { await st.col.doc(id).delete(); return; }
+  const all = (await libList()).filter(x => x.id !== id);
+  lsSet("folders", JSON.stringify(all));
+}
+
+function libMsg(t) { document.getElementById("libStatus").textContent = t; }
+function libId() { return "folder_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function libKids(id) { return libAll.filter(f => (f.parent || "") === id); }
+function libNode(id) { return id ? libAll.find(f => f.id === id) : undefined; }
+function libPath(id) {
+  const p = [];
+  let n = libNode(id), g = 0;
+  while (n && g++ < 50) { p.unshift(n); n = libNode(n.parent || ""); }
+  return p;
+}
+function libTree(id) {
+  const out = [id];
+  libKids(id).forEach(k => libTree(k.id).forEach(x => out.push(x)));
+  return out;
+}
+
+async function createFolder() {
+  const name = document.getElementById("folderName").value.trim().slice(0, 60);
+  if (!name) { libMsg("Bitte zuerst einen Ordnernamen eingeben."); return; }
+  if (libKids(libCur).some(f => f.name.toLowerCase() === name.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+  try {
+    await libPut({ id: libId(), name: name, parent: libCur, cards: [], vocab: [] });
+    document.getElementById("folderName").value = "";
+    libMsg("Ordner erstellt.");
+    await renderLibrary();
+  } catch (e) { libMsg("Speichern fehlgeschlagen. Bitte erneut versuchen."); }
+}
+
+async function saveHere(kind) {
+  const f = libNode(libCur);
+  if (!f) return;
+  const src = kind === "cards" ? cards : vocab;
+  if (!src.length) { libMsg(kind === "cards" ? "Du hast noch keine Karten zum Speichern." : "Du hast noch keine Vokabeln zum Speichern."); return; }
+  const key = kind === "cards" ? (c => c.question) : (v => (v.word + "|" + v.translation).toLowerCase());
+  const have = new Set((f[kind] || []).map(key));
+  const fresh = JSON.parse(JSON.stringify(src)).filter(x => !have.has(key(x)));
+  f[kind] = (f[kind] || []).concat(fresh);
+  try {
+    await libPut(f);
+    libMsg((kind === "cards" ? "Karten" : "Vokabeln") + " in „" + f.name + "“ gespeichert (" + fresh.length + " neu, " + f[kind].length + " insgesamt).");
+    renderLibrary();
+  } catch (e) { libMsg("Speichern fehlgeschlagen. Bitte erneut versuchen."); }
+}
+
+function loadHere(kind) {
+  const f = libNode(libCur);
+  if (!f) return;
+  const list = JSON.parse(JSON.stringify(f[kind] || []));
+  if (!list.length) { libMsg(kind === "cards" ? "In diesem Ordner sind keine Karten gespeichert." : "In diesem Ordner sind keine Vokabeln gespeichert."); return; }
+  if (kind === "cards") {
+    cards = list; index = 0; studyQueue = null; save(); updateQuiz();
+    showTab("quiz", document.querySelectorAll("nav button")[2]);
+  } else {
+    vocab = list; vocabIndex = 0; vocabQueue = null; save(); updateVocab();
+    showTab("vocab", document.querySelectorAll("nav button")[3]);
+  }
+}
+
+async function renderLibrary() {
+  const list = document.getElementById("folderList");
+  const crumbs = document.getElementById("libCrumbs");
+  const box = document.getElementById("libContent");
+  const st = await getStore();
+  document.getElementById("libMode").textContent = st
+    ? "Gespeichert in deinem Claude-Konto, auf allen deinen Geräten verfügbar."
+    : "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.";
+  list.textContent = "Lädt...";
+  try { libAll = await libList(); } catch (e) { list.textContent = "Ordner konnten nicht geladen werden."; return; }
+  if (libCur && !libNode(libCur)) libCur = "";
+
+  crumbs.replaceChildren();
+  const path = libPath(libCur);
+  const crumb = (label, id, last) => {
+    if (last) { const s = document.createElement("strong"); s.textContent = label; crumbs.appendChild(s); return; }
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.onclick = () => { libCur = id; renderLibrary(); };
+    crumbs.appendChild(b);
+  };
+  crumb("Bibliothek", "", path.length === 0);
+  path.forEach((n, i) => {
+    const sep = document.createElement("span");
+    sep.className = "small";
+    sep.textContent = "/";
+    crumbs.appendChild(sep);
+    crumb(n.name, n.id, i === path.length - 1);
+  });
+
+  box.replaceChildren();
+  const cur = libNode(libCur);
+  if (!cur) {
+    box.textContent = "Erstelle zuerst einen Ordner und öffne ihn, um Karten oder Vokabeln darin zu speichern.";
+  } else {
+    const info = document.createElement("p");
+    info.textContent = (cur.cards || []).length + " Karten · " + (cur.vocab || []).length + " Vokabeln · " + libKids(cur.id).length + " Unterordner";
+    box.appendChild(info);
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px";
+    const add = (label, fn) => { const b = document.createElement("button"); b.textContent = label; b.onclick = fn; row.appendChild(b); };
+    add("Aktuelle Karten hier speichern", () => saveHere("cards"));
+    add("Aktuelle Vokabeln hier speichern", () => saveHere("vocab"));
+    add("Karten laden (" + (cur.cards || []).length + ")", () => loadHere("cards"));
+    add("Vokabeln laden (" + (cur.vocab || []).length + ")", () => loadHere("vocab"));
+    box.appendChild(row);
+    const note = document.createElement("p");
+    note.className = "small";
+    note.textContent = "Beim Laden werden deine aktuellen Karten bzw. Vokabeln ersetzt. Speichere sie vorher.";
+    box.appendChild(note);
+  }
+
+  list.replaceChildren();
+  const kids = libKids(libCur).sort((a, b) => a.name.localeCompare(b.name));
+  if (!kids.length) { list.textContent = "Keine Unterordner hier."; return; }
+  kids.forEach(f => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const h = document.createElement("h3");
+    h.textContent = f.name;
+    const n = document.createElement("p");
+    n.className = "small";
+    n.textContent = (f.cards || []).length + " Karten · " + (f.vocab || []).length + " Vokabeln · " + libKids(f.id).length + " Unterordner";
+    const inp = document.createElement("input");
+    inp.value = f.name;
+    const selLabel = document.createElement("p");
+    selLabel.className = "small";
+    selLabel.textContent = "Verschieben nach";
+    const sel = document.createElement("select");
+    sel.appendChild(new Option("Bibliothek (oberste Ebene)", ""));
+    const banned = new Set(libTree(f.id));
+    libAll.filter(x => !banned.has(x.id))
+      .map(x => ({ id: x.id, label: libPath(x.id).map(q => q.name).join(" / ") }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .forEach(o => sel.appendChild(new Option(o.label, o.id)));
+    sel.value = f.parent || "";
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px";
+    const mk = (label, fn) => { const b = document.createElement("button"); b.textContent = label; b.onclick = () => fn(b); row.appendChild(b); return b; };
+    mk("Öffnen", () => { libCur = f.id; renderLibrary(); }).classList.add("active");
+    mk("Verschieben", async () => {
+      const target = sel.value;
+      if (target === (f.parent || "")) return;
+      if (libKids(target).some(x => x.name.toLowerCase() === f.name.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+      try { f.parent = target; await libPut(f); libMsg("Ordner verschoben."); renderLibrary(); } catch (e) { libMsg("Verschieben fehlgeschlagen."); }
+    });
+    mk("Umbenennen", async () => {
+      const nn = inp.value.trim().slice(0, 60);
+      if (!nn) return;
+      if (libKids(libCur).some(x => x.id !== f.id && x.name.toLowerCase() === nn.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+      try { f.name = nn; await libPut(f); renderLibrary(); } catch (e) { libMsg("Umbenennen fehlgeschlagen."); }
+    });
+    let armed = false;
+    mk("Löschen", async b => {
+      if (!armed) { armed = true; b.textContent = "Wirklich löschen?"; setTimeout(() => { armed = false; b.textContent = "Löschen"; }, 4000); return; }
+      try {
+        for (const id of libTree(f.id)) await libDel(id);
+        renderLibrary();
+      } catch (e) { libMsg("Löschen fehlgeschlagen."); }
+    });
+    card.append(h, n, inp, selLabel, sel, row);
+    list.appendChild(card);
+  });
+  const warn = document.createElement("p");
+  warn.className = "small";
+  warn.textContent = "Beim Löschen werden auch alle Unterordner gelöscht.";
+  list.appendChild(warn);
+}
+
+let studyQueue = null;
+
+function advance() {
+  if (studyQueue) {
+    let next = null;
+    while (studyQueue.length && next === null) {
+      const c = studyQueue.shift();
+      if (cards.indexOf(c) >= 0) next = c;
+    }
+    if (next) { index = cards.indexOf(next); updateQuiz(); return; }
+    studyQueue = null;
+    updateQuiz();
+    showFeedback([["Geschafft!", true], ["Alle Karten dieser Übungsrunde sind durch."]]);
+    return;
+  }
+  index = (index + 1) % cards.length;
+  updateQuiz();
+}
+
+function startQueue(list, label) {
+  const msg = document.getElementById("planInfo");
+  if (!list.length) { msg.textContent = "Aktuell gibt es nichts zu üben: " + label + "."; showFeedback([["Aktuell gibt es nichts zu üben: " + label + "."]]); return; }
+  studyQueue = list.slice();
+  index = cards.indexOf(studyQueue.shift());
+  showTab("quiz", document.querySelectorAll("nav button")[2]);
+  updateQuiz();
+  showFeedback([["" + label, true], [(studyQueue.length + 1) + " Karten in dieser Runde."]]);
+}
+
+function weakCards() {
+  return cards.filter(c => c.wrong && (c.streak || 0) < 2).sort((a, b) => (b.wrong / (b.seen || 1)) - (a.wrong / (a.seen || 1)) || b.wrong - a.wrong);
+}
+function dueCards() {
+  const now = Date.now();
+  return cards.filter(c => (c.due || 0) <= now).sort((a, b) => (a.due || 0) - (b.due || 0));
+}
+function practiceWeak() { startQueue(weakCards(), "Schwächen üben"); }
+function practiceDue() { startQueue(dueCards(), "Fällige Karten"); }
+
+function renderStats() {
+  const ts = document.getElementById("topicStats");
+  if (!ts) return;
+  const T = {};
+  cards.forEach(c => {
+    const t = c.topic || "Ohne Thema";
+    const o = T[t] || (T[t] = { n: 0, seen: 0, wrong: 0 });
+    o.n++; o.seen += c.seen || 0; o.wrong += c.wrong || 0;
+  });
+  ts.replaceChildren();
+  const names = Object.keys(T);
+  if (!names.length) ts.textContent = "Noch keine Karten. Erstelle zuerst welche unter „Bild scannen“.";
+  names.sort((a, b) => {
+    const pa = T[a].seen ? 1 - T[a].wrong / T[a].seen : 2, pb = T[b].seen ? 1 - T[b].wrong / T[b].seen : 2;
+    return pa - pb;
+  });
+  names.forEach(t => {
+    const o = T[t];
+    const pct = o.seen ? Math.round((1 - o.wrong / o.seen) * 100) : null;
+    const p = document.createElement("p");
+    p.textContent = t + " · " + o.n + " Karten · " + (pct === null ? "noch nicht geübt" : pct + " % richtig (" + (o.seen - o.wrong) + " von " + o.seen + ")");
+    const bar = document.createElement("div");
+    bar.style.cssText = "height:9px;background:#303d5c;border-radius:10px;overflow:hidden;margin-bottom:14px";
+    const fill = document.createElement("div");
+    fill.style.cssText = "height:100%;width:" + (pct || 0) + "%;background:" + (pct === null ? "#303d5c" : pct >= 80 ? "#3fb27f" : pct >= 50 ? "#e0a93b" : "#d9534f");
+    bar.appendChild(fill);
+    ts.append(p, bar);
+  });
+
+  const wl = document.getElementById("weakList");
+  wl.replaceChildren();
+  const weak = weakCards().slice(0, 5);
+  if (!weak.length) wl.textContent = "Noch keine Fehler – weiter so!";
+  weak.forEach(c => {
+    const p = document.createElement("p");
+    p.textContent = "• " + String(c.question).slice(0, 90) + " (" + c.wrong + " von " + c.seen + " falsch)";
+    wl.appendChild(p);
+  });
+
+  const now = Date.now(), day = 86400000;
+  const due = dueCards().length;
+  const soon = cards.filter(c => (c.due || 0) > now && c.due <= now + day).length;
+  const week = cards.filter(c => c.due > now + day && c.due <= now + 7 * day).length;
+  document.getElementById("planInfo").textContent =
+    "Jetzt fällig: " + due + " · In den nächsten 24 h: " + soon + " · Diese Woche: " + week +
+    ". Richtige Antworten kommen nach 1, 2, 4, 8, 16 Tagen wieder, falsche schon nach 10 Minuten.";
+}
+
+let vocabQueue = null;
+
+function vocabOpen() { return vocab.filter(v => v.wrong && (v.streak || 0) < 2 && inLang(v)); }
+
+function advanceVocab() {
+  if (vocabQueue) {
+    let n = null;
+    while (vocabQueue.length && n === null) {
+      const v = vocabQueue.shift();
+      if (vocab.indexOf(v) >= 0) n = v;
+    }
+    if (n) { vocabIndex = vocab.indexOf(n); updateVocab(); return; }
+    vocabQueue = null;
+    updateVocab();
+    document.getElementById("vocabCount").textContent = "Runde beendet: alle Fehler-Vokabeln der Runde sitzen.";
+    return;
+  }
+  for (let k = 1; k <= vocab.length; k++) {
+    const i = (vocabIndex + k) % vocab.length;
+    if (inLang(vocab[i])) { vocabIndex = i; break; }
+  }
+  updateVocab();
+}
+
+function rateVocab(ok) {
+  const v = vocab[vocabIndex];
+  if (!v) return;
+  v.seen = (v.seen || 0) + 1;
+  if (ok) { v.streak = (v.streak || 0) + 1; }
+  else {
+    v.wrong = (v.wrong || 0) + 1;
+    v.streak = 0;
+    if (vocabQueue && vocabQueue.indexOf(v) < 0) vocabQueue.push(v);
+  }
+  save();
+  advanceVocab();
+}
+
+function practiceVocabErrors() {
+  const c = document.getElementById("vocabCount");
+  const list = vocabOpen();
+  if (!list.length) { c.textContent = "Keine offenen Fehler. Alles sitzt."; return; }
+  vocabQueue = list.slice();
+  vocabIndex = vocab.indexOf(vocabQueue.shift());
+  updateVocab();
+  c.textContent = "Fehler-Runde: " + list.length + " Vokabeln. Falsche kommen erneut dran, bis sie zweimal in Folge sitzen.";
+}
+
+function inLang(v) {
+  const f = document.getElementById("vocabLang").value;
+  return !f || v.lang === f;
+}
+
+function pickFlip() {
+  const d = document.getElementById("vocabDir").value;
+  return d === "wf" || (d === "mix" && Math.random() < 0.5);
+}
+
+function refreshLangs() {
+  const sel = document.getElementById("vocabLang");
+  const cur = sel.value;
+  const langs = [...new Set(vocab.map(v => v.lang).filter(Boolean))].sort();
+  if (sel.options.length - 1 === langs.length && langs.every((l, i) => sel.options[i + 1].value === l)) return;
+  sel.replaceChildren();
+  sel.appendChild(new Option("Alle Sprachen", ""));
+  langs.forEach(l => sel.appendChild(new Option(l, l)));
+  sel.value = langs.indexOf(cur) >= 0 ? cur : "";
+}
+
+function vocabFilterChanged() {
+  vocabQueue = null;
+  const i = vocab.findIndex(inLang);
+  if (i >= 0) vocabIndex = i;
+  updateVocab();
+}
+
+function editVocab() {
+  const v = vocab[vocabIndex];
+  if (!v) return;
+  document.getElementById("editWord").value = v.word;
+  document.getElementById("editTrans").value = v.translation;
+  document.getElementById("vocabEdit").classList.remove("hidden");
+}
+
+function saveVocabEdit() {
+  const v = vocab[vocabIndex];
+  const w = document.getElementById("editWord").value.trim();
+  const t = document.getElementById("editTrans").value.trim();
+  if (!v || !w || !t) return;
+  v.word = w;
+  v.translation = t;
+  save();
+  updateVocab();
+}
+
+function cancelVocabEdit() { document.getElementById("vocabEdit").classList.add("hidden"); }
+
+(function () {
+  const card = document.getElementById("vocabQuestion").parentNode;
+  card.style.cursor = "pointer";
+  card.addEventListener("click", () => showVocabAnswer());
+})();
+
+let shownVocab = [];
+
+function renderVocabList() {
+  const box = document.getElementById("vocabList");
+  if (!box) return;
+  const q = document.getElementById("vocabSearch").value.trim().toLowerCase();
+  shownVocab = vocab.filter(v => inLang(v) && (!q || (v.word + " " + v.translation).toLowerCase().indexOf(q) >= 0));
+  box.replaceChildren();
+  const del = document.getElementById("vocabDelAll");
+  del.classList.toggle("hidden", !shownVocab.length);
+  del.textContent = "Alle angezeigten löschen";
+  if (!shownVocab.length) { box.textContent = vocab.length ? "Keine Treffer." : "Noch keine Vokabeln vorhanden."; return; }
+  const info = document.createElement("p");
+  info.className = "small";
+  info.textContent = shownVocab.length + " Treffer";
+  box.appendChild(info);
+  shownVocab.slice(0, 100).forEach(v => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)";
+    const t = document.createElement("span");
+    t.style.flex = "1";
+    t.textContent = v.word + " = " + v.translation + (v.lang ? " (" + v.lang + ")" : "");
+    const be = document.createElement("button");
+    be.textContent = "Bearbeiten";
+    be.onclick = () => {
+      vocabIndex = vocab.indexOf(v);
+      vocabQueue = null;
+      updateVocab();
+      editVocab();
+      document.getElementById("vocabEdit").scrollIntoView({ block: "center" });
+    };
+    const bd = document.createElement("button");
+    bd.textContent = "Löschen";
+    let armed = false;
+    bd.onclick = () => {
+      if (!armed) { armed = true; bd.textContent = "Wirklich löschen?"; setTimeout(() => { armed = false; bd.textContent = "Löschen"; }, 4000); return; }
+      const i = vocab.indexOf(v);
+      if (i >= 0) { vocab.splice(i, 1); if (vocabIndex > i) vocabIndex--; save(); updateVocab(); }
+    };
+    row.append(t, be, bd);
+    box.appendChild(row);
+  });
+  if (shownVocab.length > 100) {
+    const more = document.createElement("p");
+    more.className = "small";
+    more.textContent = "Es werden die ersten 100 angezeigt.";
+    box.appendChild(more);
+  }
+}
+
+let delAllArmed = false;
+function deleteShownVocab(btn) {
+  if (!shownVocab.length) return;
+  if (!delAllArmed) {
+    delAllArmed = true;
+    btn.textContent = "Wirklich alle " + shownVocab.length + " löschen?";
+    setTimeout(() => { delAllArmed = false; btn.textContent = "Alle angezeigten löschen"; }, 4000);
+    return;
+  }
+  delAllArmed = false;
+  const gone = new Set(shownVocab);
+  vocab = vocab.filter(v => !gone.has(v));
+  vocabIndex = 0;
+  vocabQueue = null;
+  save();
+  updateVocab();
+}
+
+renderStats();
+updateVocab();
+updateQuiz();
+</script>
+<script>
+(function () {
+  const EN = {
+    "Fremdsprache": "Foreign language", "Spalte links": "Left column",
+    "Fotografiere eine Vokabelliste. Der Text wird im Browser erkannt. Danach prüfst du die Liste und übernimmst sie.": "Take a photo of a vocabulary list. The text is recognized in your browser. Then you check the list and add it.",
+    "Vokabeln aus Foto erkennen": "Recognize words from photo",
+    "Prüfe die Liste. Pro Zeile ein Paar im Format „Wort = Übersetzung“.": "Check the list. One pair per line in the format “Word = Translation”.",
+    "Fremdsprache links, Deutsch rechts": "Foreign language left, German right", "Deutsch links, Fremdsprache rechts": "German left, foreign language right",
+    "Vokabeln übernehmen": "Add words",
+    "Erkennung abgeschlossen. Prüfe die Liste und korrigiere Fehler, bevor du die Vokabeln übernimmst.": "Recognition complete. Check the list and fix mistakes before adding the words.",
+    "Es wurden keine neuen Vokabeln übernommen. Schreibe pro Zeile „Wort = Übersetzung“.": "No new words were added. Write “Word = Translation” on each line.",
+    "Lade ein Foto deiner Lernunterlagen hoch. Der Text wird direkt in deinem Browser erkannt, das Foto verlässt dein Gerät nicht.": "Upload a photo of your study materials. The text is recognized right in your browser, the photo never leaves your device.",
+    "Sprache der Unterlagen": "Language of the material", "Deutsch und Englisch": "German and English", "Deutsch": "German", "Englisch": "English",
+    "Französisch": "French", "Spanisch": "Spanish", "Italienisch": "Italian", "Latein": "Latin",
+    "Prüfe den Text und korrigiere Fehler. Pro Zeile eine Karte im Format „Begriff: Erklärung“.": "Check the text and fix mistakes. One card per line in the format “Term: Explanation”.",
+    "Thema (optional, z. B. Photosynthese)": "Topic (optional, e.g. photosynthesis)", "Lernkarten erstellen": "Create flashcards",
+    "Bitte zuerst ein Bild auswählen.": "Please select an image first.", "Bild wird vorbereitet...": "Preparing the image...",
+    "Sprachdaten werden geladen (nur beim ersten Mal)...": "Loading language data (first time only)...",
+    "Die Texterkennung konnte nicht geladen werden. Prüfe deine Internetverbindung und lade die Seite neu.": "Text recognition could not be loaded. Check your internet connection and reload the page.",
+    "Es wurde kein Text erkannt. Versuche ein schärferes, gerades und gut beleuchtetes Foto.": "No text was recognized. Try a sharper, straight, well-lit photo.",
+    "Erkennung abgeschlossen. Bitte prüfe den Text und korrigiere Fehler, bevor du Karten erstellst.": "Recognition complete. Please check the text and fix mistakes before creating cards.",
+    "Fehler bei der Bilderkennung. Bitte versuche es mit einem anderen Foto.": "Image recognition failed. Please try a different photo.",
+    "Keine eindeutigen Begriff-Erklärung-Paare gefunden. Schreibe pro Zeile „Begriff: Erklärung“.": "No clear term–explanation pairs found. Write “Term: Explanation” on each line.",
+    "Zugang": "Access", "Zugangscode": "Access code", "Weiter": "Continue", "Wird geladen...": "Loading...",
+    "Bitte gib den Zugangscode ein, um die App zu nutzen.": "Please enter the access code to use the app.",
+    "Der Zugangscode stimmt nicht. Bitte erneut eingeben.": "The access code is wrong. Please enter it again.",
+    "Der Server ist nicht erreichbar. Bitte versuche es erneut.": "The server cannot be reached. Please try again.",
+    "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.": "Saved in this browser only. Cards and folders are not available on other devices.",
+    "Dein persönlicher Lernassistent": "Your personal study assistant",
+    "Start": "Home", "Bild scannen": "Scan image", "Abfragen": "Quiz", "Vokabeln": "Vocabulary", "Fortschritt": "Progress", "Bibliothek": "Library",
+    "Willkommen zurück!": "Welcome back!", "Was möchtest du heute lernen?": "What would you like to study today?",
+    "Lernstoff erkennen": "Recognize study material", "Lade ein Foto deiner Schulunterlagen hoch.": "Upload a photo of your school materials.",
+    "Wissen testen": "Test your knowledge", "Lass dich zu deinem Lernstoff abfragen.": "Get quizzed on your study material.",
+    "Vokabeln lernen": "Learn vocabulary", "Trainiere deine Fremdsprachen.": "Practice your foreign languages.", "Jetzt lernen": "Start learning",
+    "Bilderkennung": "Image recognition", "Lade ein Foto deiner Lernunterlagen hoch.": "Upload a photo of your study materials.",
+    "Bild erkennen": "Recognize image", "Erkannter Lernstoff": "Recognized material",
+    "Hier erscheint dein erkannter Text (oder füge Text selbst ein)...": "Your recognized text appears here (or paste text yourself)...",
+    "Schwierigkeitsgrad": "Difficulty", "Leicht": "Easy", "Mittel": "Medium", "Schwer": "Hard", "Fragetyp": "Question type",
+    "Gemischt": "Mixed", "Freie Antworten": "Free answers", "Multiple Choice": "Multiple choice", "Richtig/Falsch": "True/False",
+    "Oder nur ein Thema eingeben (z.B. Photosynthese, Französische Revolution)": "Or just enter a topic (e.g. photosynthesis, French Revolution)",
+    "Karten zum Thema aus KI-Wissen erstellen": "Create cards on the topic from AI knowledge",
+    "Mit KI Lernkarten erstellen": "Create flashcards with AI", "Lernkarten erstellen (ohne KI)": "Create flashcards (without AI)",
+    "Lernmodus": "Study mode", "Noch keine Lernkarten vorhanden.": "No flashcards yet.",
+    "Adaptiv weiterüben": "Keep practicing adaptively", "Falsche Karten wiederholen": "Repeat wrong cards",
+    "Deine Antwort in eigenen Worten...": "Your answer in your own words...", "Antwort von der KI prüfen lassen": "Have the AI check my answer",
+    "Erklär es mir": "Explain it to me", "Antwort anzeigen": "Show answer",
+    "Wie gut konntest du die Antwort?": "How well did you know the answer?", "Gewusst": "Knew it", "Noch nicht": "Not yet",
+    "Vokabeltrainer": "Vocabulary trainer", "Vokabelseite scannen": "Scan a vocabulary page",
+    "Fotografiere eine Vokabelliste oder eine Buchseite. Die KI erkennt die Wörter samt Übersetzung und legt die Vokabeln automatisch an.": "Take a photo of a vocabulary list or a book page. The AI recognizes the words with their translations and creates the vocabulary automatically.",
+    "Vokabeln aus Foto erstellen": "Create vocabulary from photo", "Einzelne Vokabel hinzufügen": "Add a single word",
+    "Vokabel (z.B. maison)": "Word (e.g. maison)", "Übersetzung (z.B. Haus)": "Translation (e.g. house)", "Vokabel hinzufügen": "Add word",
+    "Deine Vokabeln erscheinen hier.": "Your vocabulary appears here.", "Nächste Vokabel": "Next word", "Übersetzung zeigen": "Show translation",
+    "Hast du es gewusst?": "Did you know it?", "Nicht gewusst": "Didn’t know it", "Fehler wiederholen": "Repeat mistakes",
+    "Dein Lernfortschritt": "Your progress", "Lernpunkte": "Points", "Richtig beantwortete Fragen": "Correctly answered questions",
+    "Dein Fortschritt": "Your progress", "Fortschritt pro Thema": "Progress by topic", "Deine Schwächen": "Your weak spots",
+    "Schwächen gezielt üben": "Practice weak spots", "Wiederholungsplan": "Review schedule", "Fällige Karten jetzt üben": "Practice due cards now",
+    "Aktuelle Karten speichern": "Save current cards", "Ordnername selbst wählen (z.B. Biologie – Zelle)": "Choose a folder name (e.g. Biology – Cell)",
+    "In Ordner speichern": "Save to folder", "Gibt es den Ordner schon, werden nur neue Karten hinzugefügt.": "If the folder already exists, only new cards are added.",
+    "Meine Ordner": "My folders", "Beim Öffnen ersetzt der Ordner deine aktuellen Karten. Speichere sie vorher.": "Opening a folder replaces your current cards. Save them first.",
+    "Öffnen": "Open", "Umbenennen": "Rename", "Löschen": "Delete", "Wirklich löschen?": "Really delete?",
+    "Name des neuen Ordners (z.B. Französisch)": "Name of the new folder (e.g. French)", "Ordner hier erstellen": "Create folder here", "Ordner erstellen": "Create folder",
+    "Inhalt dieses Ordners": "Contents of this folder", "Unterordner": "Subfolders", "Aktuelle Karten hier speichern": "Save current cards here", "Aktuelle Vokabeln hier speichern": "Save current vocabulary here",
+    "Beim Laden werden deine aktuellen Karten bzw. Vokabeln ersetzt. Speichere sie vorher.": "Loading replaces your current cards or vocabulary. Save them first.",
+    "Erstelle zuerst einen Ordner und öffne ihn, um Karten oder Vokabeln darin zu speichern.": "Create a folder first and open it to save cards or vocabulary in it.",
+    "Beim Löschen werden auch alle Unterordner gelöscht.": "Deleting also deletes all subfolders.", "Keine Unterordner hier.": "No subfolders here.",
+    "Diesen Ordner gibt es hier schon.": "This folder already exists here.", "Ordner erstellt.": "Folder created.",
+    "Du hast noch keine Vokabeln zum Speichern.": "You have no vocabulary to save yet.",
+    "In diesem Ordner sind keine Karten gespeichert.": "No cards are saved in this folder.", "In diesem Ordner sind keine Vokabeln gespeichert.": "No vocabulary is saved in this folder.",
+    "Nächste Frage →": "Next question →",
+    "Bearbeiten": "Edit", "Anmeldung": "Sign in", "Anmeldung wird geprüft...": "Checking sign-in...", "Erneut prüfen": "Check again", "Angemeldet": "Signed in",
+    "Bitte melde dich bei Claude an, um NEURO LEARN zu nutzen. Jeder Nutzer hat ein eigenes Konto, und alle Daten bleiben gespeichert, auch wenn du den Browserverlauf löschst.": "Please sign in to Claude to use NEURO LEARN. Every user has their own account, and all data stays saved even if you clear your browser history.",
+    "Dein Konto konnte nicht geladen werden. Bitte versuche es erneut.": "Your account could not be loaded. Please try again.", "Verschieben": "Move", "Verschieben nach": "Move to", "Bibliothek (oberste Ebene)": "Library (top level)", "Ordner verschoben.": "Folder moved.", "Verschieben fehlgeschlagen.": "Moving failed.",
+    "Alle Vokabeln": "All vocabulary", "Suchen (Wort oder Übersetzung)...": "Search (word or translation)...", "Alle angezeigten löschen": "Delete all shown",
+    "Keine Treffer.": "No results.", "Es werden die ersten 100 angezeigt.": "Showing the first 100.", "Änderung speichern": "Save change", "Abbrechen": "Cancel", "Training": "Training", "Richtung": "Direction",
+    "Fremdsprache → Deutsch": "Foreign language → mother tongue", "Deutsch → Fremdsprache": "Mother tongue → foreign language",
+    "Alle Sprachen": "All languages", "Sprache": "Language", "Sprache (z.B. Französisch)": "Language (e.g. French)",
+    "Vokabel": "Word", "Übersetzung": "Translation", "Tippe auf die Karte, um die Antwort zu zeigen.": "Tap the card to show the answer.", "Richtig": "Correct", "Falsch": "False", "Teilweise richtig": "Partly correct", "Nicht ganz": "Not quite",
+    "Erklärung": "Explanation", "Geschafft!": "Done!", "Alle Karten dieser Übungsrunde sind durch.": "You have finished every card in this round.",
+    "Schwächen üben": "Practice weak spots", "Fällige Karten": "Due cards",
+    "KI nicht verfügbar.": "AI unavailable.",
+    "KI nicht verfügbar. Nutze „Antwort anzeigen“.": "AI unavailable. Use “Show answer”.",
+    "KI nicht verfügbar. Füge den Text unten manuell ein.": "AI unavailable. Paste the text below manually.",
+    "KI nicht verfügbar. Nutze „Lernkarten erstellen (ohne KI)“.": "AI unavailable. Use “Create flashcards (without AI)”.",
+    "KI nicht verfügbar. Du kannst Vokabeln unten von Hand hinzufügen.": "AI unavailable. You can add words by hand below.",
+    "Die KI denkt nach...": "The AI is thinking...", "Die KI erklärt...": "The AI is explaining...",
+    "Hinweis: Die Lernkarte war fehlerhaft und wurde korrigiert.": "Note: The flashcard was wrong and has been corrected.",
+    "Bewertung fehlgeschlagen. Bitte erneut versuchen.": "Evaluation failed. Please try again.", "Erklärung fehlgeschlagen.": "Explanation failed.",
+    "Claude liest dein Bild...": "Claude is reading your image...", "Erkennung abgeschlossen!": "Recognition complete!",
+    "Fehler bei der Bilderkennung.": "Image recognition failed.", "Fehler bei der Bilderkennung (Zugriff nicht erlaubt).": "Image recognition failed (access not granted).",
+    "KI analysiert deinen Lernstoff...": "The AI is analyzing your material...",
+    "KI-Anfrage fehlgeschlagen. Versuche es erneut oder nutze die Variante ohne KI.": "AI request failed. Try again or use the option without AI.",
+    "KI-Anfrage fehlgeschlagen. Bitte erneut versuchen.": "AI request failed. Please try again.",
+    "Die KI passt die Fragen an deinen Lernstand an...": "The AI is adapting the questions to your level...",
+    "Erstelle zuerst Lernkarten.": "Create some flashcards first.", "Anpassung fehlgeschlagen. Bitte erneut versuchen.": "Adaptation failed. Please try again.",
+    "Ordner konnten nicht geladen werden.": "Folders could not be loaded.", "Lädt...": "Loading...",
+    "Noch keine Ordner. Speichere oben deine ersten Karten.": "No folders yet. Save your first cards above.",
+    "Gespeichert in deinem Claude-Konto, auf allen deinen Geräten verfügbar.": "Saved in your Claude account, available on all your devices.",
+    "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.": "Saved in this browser only. Cards and folders are not available on other devices.",
+    "Bitte zuerst einen Ordnernamen eingeben.": "Please enter a folder name first.", "Du hast noch keine Karten zum Speichern.": "You have no cards to save yet.",
+    "Speichern fehlgeschlagen. Bitte erneut versuchen.": "Saving failed. Please try again.",
+    "Umbenennen fehlgeschlagen.": "Renaming failed.", "Löschen fehlgeschlagen.": "Deleting failed.",
+    "Noch keine Karten. Erstelle zuerst welche unter „Bild scannen“.": "No cards yet. Create some first under “Scan image”.",
+    "Noch keine Fehler – weiter so!": "No mistakes yet – keep it up!",
+    "Noch keine Vokabeln vorhanden.": "No vocabulary yet.",
+    "Runde beendet: alle Fehler-Vokabeln der Runde sitzen.": "Round finished: all mistake words of this round are learned.",
+    "Keine offenen Fehler. Alles sitzt.": "No open mistakes. Everything sticks.",
+    "Bitte zuerst ein Foto auswählen.": "Please select a photo first.", "Claude liest die Vokabelseite...": "Claude is reading the vocabulary page...",
+    "Es wurden keine neuen Vokabeln erkannt. Versuche ein schärferes, gerades Foto.": "No new words were recognized. Try a sharper, straight photo.",
+    "Die Vokabelseite konnte nicht gelesen werden. Bitte erneut versuchen.": "The vocabulary page could not be read. Please try again.",
+    "Bitte zuerst ein Bild auswählen!": "Please select an image first!", "Kein Lernstoff vorhanden!": "No study material available!",
+    "Bitte beide Felder ausfüllen!": "Please fill in both fields!", "Bitte zuerst eine Antwort eingeben!": "Please enter an answer first!",
+    "Bitte ein Thema eingeben!": "Please enter a topic!",
+    "Keine eindeutigen Begriff-Erklärung-Paare gefunden. Du kannst Lernkarten auch manuell hinzufügen.": "No clear term–definition pairs found. You can also add flashcards manually."
+  };
+  const L = { leicht: "easy", mittel: "medium", schwer: "hard" };
+  const RULES = [
+    [/^(\d+) Vokabeln übernommen(?:, (\d+) Zeilen ohne Trennzeichen übersprungen)?\.$/, (m, a, b) => a + " words added" + (b !== undefined ? ", " + b + " lines without a separator skipped" : "") + "."],
+    [/^Text wird erkannt\.\.\. (\d+) %$/, "Recognizing text... $1 %"],
+    [/^Frage (\d+) von (\d+)$/, "Question $1 of $2"],
+    [/^Was bedeutet: ([\s\S]*)\?$/, "What does $1 mean?"],
+    [/^Korrekte Antwort: ([\s\S]*)$/, "Correct answer: $1"],
+    [/^(\d+) Karten$/, "$1 cards"],
+    [/^(\d+) Treffer$/, "$1 results"],
+    [/^Angemeldet: ([\s\S]*)$/, "Signed in: $1"],
+    [/^Wirklich alle (\d+) löschen\?$/, "Really delete all $1?"],
+    [/^(\d+) Karten · (\d+) Vokabeln · (\d+) Unterordner$/, "$1 cards · $2 words · $3 subfolders"],
+    [/^Karten laden \((\d+)\)$/, "Load cards ($1)"],
+    [/^Vokabeln laden \((\d+)\)$/, "Load vocabulary ($1)"],
+    [/^(Karten|Vokabeln) in „([\s\S]*)“ gespeichert \((\d+) neu, (\d+) insgesamt\)\.$/, (m, k, n, a, b) => (k === "Karten" ? "Cards" : "Vocabulary") + " saved to “" + n + "” (" + a + " new, " + b + " total)."],
+    [/^(\d+) Karten in dieser Runde\.$/, "$1 cards in this round."],
+    [/^(\d+) neue Fragen$/, "$1 new questions"],
+    [/^(\d+) Lernkarten erstellt!$/, "$1 flashcards created!"],
+    [/^(\d+) KI-Lernkarten erstellt! Starte unter „Abfragen“\.$/, "$1 AI flashcards created! Start under “Quiz”."],
+    [/^(\d+) Karten erstellt! Starte unter „Abfragen“\.$/, "$1 cards created! Start under “Quiz”."],
+    [/^KI erstellt Karten zu „([\s\S]*)“\.\.\.$/, "The AI is creating cards on “$1”..."],
+    [/^Aktuell gibt es nichts zu üben: (Schwächen üben|Fällige Karten)\.$/, (m, a) => "Nothing to practice right now: " + (a === "Fällige Karten" ? "due cards" : "practice weak spots") + "."],
+    [/^Niveau: (leicht|mittel|schwer) \| Schwerpunkt: ([\s\S]*)$/, (m, a, b) => "Level: " + L[a] + " | Focus: " + b],
+    [/^Gespeichert in „([\s\S]*)“ \((\d+) Karten hinzugefügt, (\d+) insgesamt\)\.$/, "Saved to “$1” ($2 cards added, $3 total)."],
+    [/^([\s\S]*) · (\d+) Karten · noch nicht geübt$/, "$1 · $2 cards · not practiced yet"],
+    [/^([\s\S]*) · (\d+) Karten · (\d+) % richtig \((\d+) von (\d+)\)$/, "$1 · $2 cards · $3 % correct ($4 of $5)"],
+    [/^• ([\s\S]*) \((\d+) von (\d+) falsch\)$/, "• $1 ($2 of $3 wrong)"],
+    [/^Jetzt fällig: (\d+) · In den nächsten 24 h: (\d+) · Diese Woche: (\d+)\. [\s\S]*$/, "Due now: $1 · Next 24 h: $2 · This week: $3. Correct answers return after 1, 2, 4, 8 and 16 days, wrong ones after 10 minutes."],
+    [/^(\d+) Vokabeln gespeichert(?:, (\d+) zum Wiederholen)?\.$/, (m, a, b) => a + " words saved" + (b !== undefined ? ", " + b + " to review" : "") + "."],
+    [/^Fehler-Runde: (\d+) Vokabeln\. [\s\S]*$/, "Mistake round: $1 words. Wrong ones come back until you get them right twice in a row."],
+    [/^(\d+) Vokabeln(?: \(([\s\S]*?)\))? angelegt\. Zum Beispiel: ([\s\S]*)\.$/, (m, n, lang, ex) => n + " words" + (lang ? " (" + lang + ")" : "") + " created. For example: " + ex + "."]
+  ];
+  let LANG = "de";
+  try { LANG = localStorage.getItem("lang") || ((navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en"); } catch (e) {}
+
+  window.trText = function (s) {
+    if (LANG !== "en") return s;
+    const k = String(s).trim();
+    if (!k) return s;
+    if (Object.prototype.hasOwnProperty.call(EN, k)) return String(s).replace(k, EN[k]);
+    for (const [re, rep] of RULES) if (re.test(k)) return String(s).replace(k, k.replace(re, rep));
+    return s;
+  };
+
+  const recs = new WeakMap();
+  const skip = n => { const p = n.parentNode; return !p || /^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName); };
+  function proc(n) {
+    if (skip(n)) return;
+    const v = n.nodeValue, r = recs.get(n);
+    if (r && v === r.out) return;
+    const out = LANG === "en" ? window.trText(v) : v;
+    recs.set(n, { orig: v, out: out });
+    if (out !== v) n.nodeValue = out;
+  }
+  function walk(root) {
+    if (root.nodeType === 3) { proc(root); return; }
+    if (root.nodeType !== 1 && root.nodeType !== 11) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const list = [];
+    while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(proc);
+    if (root.querySelectorAll) root.querySelectorAll("[placeholder]").forEach(ph);
+  }
+  function ph(el) {
+    if (el.dataset.phDe === undefined) el.dataset.phDe = el.getAttribute("placeholder");
+    el.setAttribute("placeholder", LANG === "en" ? window.trText(el.dataset.phDe) : el.dataset.phDe);
+  }
+  function applyAll() {
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const list = [];
+    while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(n => {
+      if (skip(n)) return;
+      const r = recs.get(n);
+      const src = r ? r.orig : n.nodeValue;
+      const out = LANG === "en" ? window.trText(src) : src;
+      recs.set(n, { orig: src, out: out });
+      if (n.nodeValue !== out) n.nodeValue = out;
+    });
+    document.querySelectorAll("[placeholder]").forEach(ph);
+    document.documentElement.lang = LANG;
+    document.getElementById("langDe").classList.toggle("active", LANG === "de");
+    document.getElementById("langEn").classList.toggle("active", LANG === "en");
+  }
+  window.setLang = function (l) {
+    LANG = l;
+    try { localStorage.setItem("lang", l); } catch (e) {}
+    applyAll();
+  };
+  window.getLang = () => LANG;
+
+  new MutationObserver(ms => {
+    ms.forEach(m => {
+      if (m.type === "characterData") proc(m.target);
+      else m.addedNodes.forEach(walk);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  let _tt;
+  window.showToast = function (m) {
+    const t = document.getElementById("toast");
+    t.textContent = m;
+    t.classList.remove("hidden");
+    clearTimeout(_tt);
+    _tt = setTimeout(() => t.classList.add("hidden"), 4500);
+  };
+  window.alert = m => window.showToast(window.trText(String(m)));
+
+
+  applyAll();
+})();
+</script>
+</body>
+</html>
