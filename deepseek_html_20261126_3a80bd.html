@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NEURO LEARN</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --bg:#0e1116; --surface:#161b22; --surface2:#1b212c; --border:#2a3140;
+  --text:#e6e9ef; --muted:#8b93a5; --accent:#4c7df0; --accent-hover:#6890f3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--bg); }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px; line-height: 1.55;
+  background: var(--bg); color: var(--text);
+}
+header { padding: 22px 28px 18px; background: var(--surface); border-bottom: 1px solid var(--border); position: relative; }
+.logo { font-size: 15px; font-weight: 700; letter-spacing: .22em; color: var(--text); }
+header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.langsw { position: absolute; right: 20px; top: 20px; display: flex; gap: 4px; }
+.langsw button { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+main { max-width: 1120px; margin: auto; padding: 24px 20px 48px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: start; }
+
+nav { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: 16px; display: flex; flex-direction: column; gap: 2px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+nav button {
+  display: block; width: 100%; text-align: left; background: transparent; border: none; border-left: 3px solid transparent; border-radius: 0 8px 8px 0;
+  color: var(--muted); padding: 11px 16px; font-weight: 600; font-size: 14px;
+}
+nav button:hover { background: var(--surface2); color: var(--text); }
+nav button.active { background: var(--surface2); color: var(--text); border-left-color: var(--accent); }
+@media (max-width: 640px) {
+  main { grid-template-columns: 1fr; }
+  nav { grid-row: auto; position: static; flex-direction: row; overflow-x: auto; }
+  nav button { width: auto; white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; }
+  nav button.active { border-bottom-color: var(--accent); }
+  .panel { grid-column: 1 !important; grid-row: auto !important; }
+}
+
+button {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;
+  font-family: inherit; transition: background .15s, border-color .15s, color .15s;
+}
+button:hover { background: #232b3a; border-color: #3a4358; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: wait; }
+button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.panel { grid-column: 2; grid-row: 1; display: none; background: var(--surface); padding: 28px; border-radius: 12px; border: 1px solid var(--border); }
+.panel.active { display: block; animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .panel.active { animation: none; } }
+
+h2 { margin: 0 0 6px; font-size: 22px; font-weight: 600; color: var(--text); }
+h3 { margin: 26px 0 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+p { color: #c3c9d6; }
+
+input, textarea, select {
+  width: 100%; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); border-radius: 8px; margin: 8px 0; font-family: inherit; font-size: 15px;
+}
+textarea { min-height: 130px; resize: vertical; }
+
+.action { background: var(--accent); border-color: var(--accent); color: #fff; width: 100%; margin-top: 10px; }
+.action:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+.card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 14px 0; text-align: left; }
+.card h3 { margin-top: 0; }
+#question { font-size: 20px; font-weight: 500; line-height: 1.4; margin: 0 0 8px; }
+.small { color: var(--muted); font-size: 13px; }
+
+#points { font-size: 42px; margin: 0; font-weight: 600; }
+#progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+#bar { height: 100%; width: 0%; background: var(--accent); transition: width .4s ease; }
+
+.buddy { display: flex; align-items: center; gap: 16px; margin: 6px 0 16px; }
+.buddy-fig { width: 84px; height: 84px; flex: none; }
+.buddy-fig svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.buddy-say { position: relative; flex: 1; min-width: 0; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; font-weight: 600; font-size: 15px; line-height: 1.4; }
+.buddy-say::before { content: ""; position: absolute; left: -7px; top: 50%; width: 12px; height: 12px; background: var(--surface2); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: translateY(-50%) rotate(45deg); }
+@keyframes buddy-hop { 0% { transform: none; } 30% { transform: translateY(-14px); } 55% { transform: none; } 75% { transform: translateY(-5px); } 100% { transform: none; } }
+@keyframes buddy-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-5px) rotate(-3deg); } 40% { transform: translateX(5px) rotate(3deg); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+.buddy-fig.happy, .buddy-fig.cheer { animation: buddy-hop .7s ease; }
+.buddy-fig.sad { animation: buddy-shake .5s ease; }
+@media (prefers-reduced-motion: reduce) { .buddy-fig { animation: none !important; } }
+#toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 2000; max-width: min(92vw, 420px); padding: 12px 18px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.hidden { display: none; }
+
+#modeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+#modeGrid button { padding: 16px; text-align: left; line-height: 1.3; }
+.mode-icon { font-size: 20px; }
+.mode-name { margin-top: 6px; display: block; }
+
+#authBar { position: absolute; right: 20px; bottom: 8px; display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--muted); }
+#authBar button { padding: 4px 10px; font-size: 11px; }
+
+.avatar {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:700;
+  background:var(--accent); color:#fff; margin-right:6px;
+}
+
+.auth-btn-social {
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  margin-top:10px; background:#fff; color:#1a1a1a; border:1px solid #dadce0; font-weight:500;
+}
+.auth-btn-social:hover { background:#f1f3f4; border-color:#c4c7c5; }
+.auth-btn-social svg { width:18px; height:18px; }
+
+.auth-divider { display:flex; align-items:center; gap:10px; margin:16px 0; color:var(--muted); font-size:12px; }
+.auth-divider::before, .auth-divider::after { content:""; flex:1; height:1px; background:var(--border); }
+</style>
+</head>
+<body>
+
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
+
+<header>
+  <div class="logo">NEURO LEARN</div>
+  <div class="langsw"><button id="langDe" onclick="setLang('de')">DE</button><button id="langEn" onclick="setLang('en')">EN</button></div>
+  <p>Dein persönlicher Lernassistent</p>
+  <div id="authBar"></div>
+</header>
+
+<main>
+
+<nav>
+  <button data-tab="home" class="active" onclick="showTab('home',this)">Start</button>
+  <button data-tab="scan" onclick="showTab('scan',this)">Bild scannen</button>
+  <button data-tab="quiz" onclick="showTab('quiz',this)">Abfragen</button>
+  <button data-tab="modes" onclick="showTab('modes',this)">Lernmodi</button>
+  <button data-tab="vocab" onclick="showTab('vocab',this)">Vokabeln</button>
+  <button data-tab="stats" onclick="showTab('stats',this); renderStats()">Fortschritt</button>
+  <button data-tab="library" onclick="showTab('library',this); renderLibrary()">Bibliothek</button>
+</nav>
+
+<section id="home" class="panel active">
+  <h2>Willkommen zurück!</h2>
+  <div class="buddy" id="buddy-home"><div class="buddy-fig"></div><div class="buddy-say"></div></div>
+
+  <div class="card"><h3>Lernstoff erkennen</h3>Lade ein Foto deiner Schulunterlagen hoch.</div>
+  <div class="card"><h3>Wissen testen</h3>Lass dich zu deinem Lernstoff abfragen.</div>
+  <div class="card"><h3>Vokabeln lernen</h3>Trainiere deine Fremdsprachen.</div>
+
+  <button class="action" onclick="showTab('scan',document.querySelector('[data-tab=\'scan\']'))">Jetzt lernen</button>
+</section>
+
+<section id="scan" class="panel">
+  <h2>Bilderkennung</h2>
+  <p>Lade ein Foto deiner Lernunterlagen hoch. Der Text wird direkt in deinem Browser erkannt, das Foto verlässt dein Gerät nicht.</p>
+  <input type="file" id="imageInput" accept="image/*">
+  <label class="small" for="ocrLang">Sprache der Unterlagen</label>
+  <select id="ocrLang">
+    <option value="deu+eng" selected>Deutsch und Englisch</option>
+    <option value="deu">Deutsch</option><option value="eng">Englisch</option>
+    <option value="fra">Französisch</option><option value="spa">Spanisch</option>
+    <option value="ita">Italienisch</option><option value="lat">Latein</option>
+  </select>
+  <button class="action" id="scanBtn" onclick="scanImage()">Bild erkennen</button>
+  <p id="scanStatus" class="small"></p>
+
+  <h3>Erkannter Lernstoff</h3>
+  <p class="small">Prüfe den Text und korrigiere Fehler. Pro Zeile eine Karte im Format „Begriff: Erklärung".</p>
+  <textarea id="recognized" placeholder="Hier erscheint dein erkannter Text (oder füge Text selbst ein)..."></textarea>
+  <input id="topicInput" placeholder="Thema (optional, z. B. Photosynthese)">
+  <button class="action" onclick="createCards()">Lernkarten erstellen</button>
+</section>
+
+<section id="quiz" class="panel">
+  <h2>Lernmodus</h2>
+  <p id="quizCounter" class="small"></p>
+  <div class="buddy" id="buddy-quiz"><div class="buddy-fig"></div><div class="buddy-say"></div></div>
+  <div class="card">
+    <h3 id="question">Noch keine Lernkarten vorhanden.</h3>
+    <div id="answerArea"></div>
+  </div>
+  <div id="feedback" class="card hidden" style="text-align:left"></div>
+  <button class="action" id="showAnswer" onclick="revealAnswer()">Antwort anzeigen</button>
+  <div id="rating" class="hidden">
+    <p>Wie gut konntest du die Antwort?</p>
+    <button onclick="nextQuestion(true)">Gewusst</button>
+    <button onclick="nextQuestion(false)">Noch nicht</button>
+  </div>
+</section>
+
+<section id="modes" class="panel">
+  <h2>Lernmodi</h2>
+  <p class="small">Wähle einen Modus. Alle Modi nutzen deine vorhandenen Lernkarten.</p>
+
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <strong id="xpLevel">Level 1</strong>
+      <div class="small" id="xpText">0 / 100 XP</div>
+    </div>
+    <div style="flex:1;min-width:140px;max-width:320px">
+      <div id="progress" style="margin:0"><div id="xpBar"></div></div>
+    </div>
+    <div class="small" id="streakInfo"></div>
+  </div>
+
+  <div id="modeGrid"></div>
+
+  <div id="modePlay" class="hidden">
+    <div class="buddy" id="buddy-mode"><div class="buddy-fig"></div><div class="buddy-say"></div></div>
+    <p class="small" id="modeInfo"></p>
+    <div class="card">
+      <h3 id="modeQuestion">…</h3>
+      <div id="modeBody"></div>
+    </div>
+    <div id="modeResult" class="card hidden"></div>
+    <button onclick="exitMode()">Modus beenden</button>
+  </div>
+
+  <h3>Erfolge</h3>
+  <div id="achList" class="card"></div>
+</section>
+
+<section id="vocab" class="panel">
+  <h2>Vokabeltrainer</h2>
+
+  <h3>Vokabelseite scannen</h3>
+  <p class="small">Fotografiere eine Vokabelliste. Der Text wird im Browser erkannt. Danach prüfst du die Liste und übernimmst sie.</p>
+  <input type="file" id="vocabImage" accept="image/*">
+  <label class="small" for="vocabOcrLang">Fremdsprache</label>
+  <select id="vocabOcrLang">
+    <option value="fra" selected>Französisch</option>
+    <option value="eng">Englisch</option><option value="spa">Spanisch</option>
+    <option value="ita">Italienisch</option><option value="lat">Latein</option>
+  </select>
+  <button class="action" id="vocabScanBtn" onclick="scanVocabPage()">Vokabeln aus Foto erkennen</button>
+  <p id="vocabScanStatus" class="small"></p>
+  <div id="vocabImport" class="hidden">
+    <p class="small">Prüfe die Liste. Pro Zeile ein Paar im Format „Wort = Übersetzung".</p>
+    <textarea id="vocabImportText"></textarea>
+    <label class="small" for="vocabOrder">Spalte links</label>
+    <select id="vocabOrder">
+      <option value="fw" selected>Fremdsprache links, Deutsch rechts</option>
+      <option value="wf">Deutsch links, Fremdsprache rechts</option>
+    </select>
+    <button class="action" onclick="importVocab()">Vokabeln übernehmen</button>
+  </div>
+
+  <h3>Einzelne Vokabel hinzufügen</h3>
+  <input id="word" placeholder="Vokabel (z.B. maison)">
+  <input id="translation" placeholder="Übersetzung (z.B. Haus)">
+  <input id="wordLang" placeholder="Sprache (z.B. Französisch)">
+  <button class="action" onclick="addVocab()">Vokabel hinzufügen</button>
+
+  <h3>Training</h3>
+  <label class="small" for="vocabDir">Richtung</label>
+  <select id="vocabDir" onchange="updateVocab()">
+    <option value="fw" selected>Fremdsprache → Deutsch</option>
+    <option value="wf">Deutsch → Fremdsprache</option>
+    <option value="mix">Gemischt</option>
+  </select>
+  <label class="small" for="vocabLang">Sprache</label>
+  <select id="vocabLang" onchange="vocabFilterChanged()"><option value="">Alle Sprachen</option></select>
+
+  <div class="buddy" id="buddy-vocab"><div class="buddy-fig"></div><div class="buddy-say"></div></div>
+
+  <div class="card">
+    <h3 id="vocabQuestion">Deine Vokabeln erscheinen hier.</h3>
+    <p id="vocabAnswer"></p>
+    <p class="small">Tippe auf die Karte, um die Antwort zu zeigen.</p>
+  </div>
+
+  <button onclick="nextVocab()">Nächste Vokabel</button>
+  <button onclick="showVocabAnswer()">Übersetzung zeigen</button>
+
+  <div id="vocabEdit" class="card hidden">
+    <input id="editWord" placeholder="Vokabel">
+    <input id="editTrans" placeholder="Übersetzung">
+    <button class="action" onclick="saveVocabEdit()">Änderung speichern</button>
+    <button onclick="cancelVocabEdit()">Abbrechen</button>
+  </div>
+
+  <div id="vocabRating" class="hidden" style="margin-top:12px">
+    <p class="small">Hast du es gewusst?</p>
+    <button onclick="rateVocab(true)">Gewusst</button>
+    <button onclick="rateVocab(false)">Nicht gewusst</button>
+  </div>
+
+  <button class="action" onclick="practiceVocabErrors()">Fehler wiederholen</button>
+  <p id="vocabCount" class="small"></p>
+
+  <h3>Alle Vokabeln</h3>
+  <input id="vocabSearch" placeholder="Suchen (Wort oder Übersetzung)..." oninput="renderVocabList()">
+  <div id="vocabList"></div>
+  <button id="vocabDelAll" class="hidden" onclick="deleteShownVocab(this)">Alle angezeigten löschen</button>
+</section>
+
+<section id="stats" class="panel">
+  <h2>Dein Lernfortschritt</h2>
+  <div class="card"><h1 id="points">0</h1><p>Lernpunkte</p></div>
+  <p>Richtig beantwortete Fragen</p><h3 id="correct">0</h3>
+  <p>Dein Fortschritt</p>
+  <div id="progress2" style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+    <div id="bar2" style="height:100%;width:0%;background:var(--accent);transition:width .4s ease"></div>
+  </div>
+  <p id="percentage">0 %</p>
+
+  <h3>Fortschritt pro Thema</h3><div id="topicStats"></div>
+  <h3>Deine Schwächen</h3><div id="weakList"></div>
+  <button class="action" onclick="practiceWeak()">Schwächen gezielt üben</button>
+  <h3>Wiederholungsplan</h3><div id="planInfo"></div>
+  <button class="action" onclick="practiceDue()">Fällige Karten jetzt üben</button>
+</section>
+
+<section id="library" class="panel">
+  <h2>Bibliothek</h2>
+  <p class="small" id="libMode"></p>
+  <div id="libCrumbs" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0"></div>
+
+  <h3>Ordner hier erstellen</h3>
+  <input id="folderName" placeholder="Name des neuen Ordners (z.B. Französisch)">
+  <button class="action" onclick="createFolder()">Ordner erstellen</button>
+  <p id="libStatus" class="small"></p>
+
+  <h3>Inhalt dieses Ordners</h3><div id="libContent" class="card"></div>
+  <h3>Unterordner</h3><div id="folderList"></div>
+</section>
+
+</main>
+
+<!-- ===================== AUTH MODAL ===================== -->
+<div id="authOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.5);margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <strong style="font-size:18px" id="authTitle">Anmelden</strong>
+      <button onclick="closeAuth()" style="padding:4px 10px;font-size:16px" aria-label="Schließen">×</button>
+    </div>
+
+    <div id="authError" class="hidden" style="background:#3a1e1e;border:1px solid #d9534f;color:#ffb3b3;padding:10px 14px;border-radius:8px;font-size:13px;margin:10px 0"></div>
+
+    <button type="button" class="auth-btn-social" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Mit Google anmelden
+    </button>
+
+    <div class="auth-divider">oder mit E-Mail</div>
+
+    <form id="authForm" onsubmit="return submitAuth(event)">
+      <label class="small" for="authEmail">E-Mail</label>
+      <input id="authEmail" type="email" autocomplete="email" required placeholder="du@beispiel.de">
+
+      <label class="small" for="authPassword">Passwort</label>
+      <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="Mindestens 6 Zeichen">
+
+      <div id="authConfirmWrap" class="hidden">
+        <label class="small" for="authConfirm">Passwort wiederholen</label>
+        <input id="authConfirm" type="password" autocomplete="new-password" placeholder="Passwort wiederholen">
+      </div>
+
+      <button type="submit" class="action" id="authSubmit">Anmelden</button>
+    </form>
+
+    <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted)">
+      <span id="authToggleText">Noch kein Konto?</span>
+      <button type="button" onclick="toggleAuthMode()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-weight:600;padding:0;font-size:13px" id="authToggleBtn">Registrieren</button>
+    </div>
+
+    <div style="text-align:center;margin-top:6px">
+      <button type="button" onclick="forgotPassword()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0">Passwort vergessen?</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ACCOUNT MENU ===================== -->
+<div id="accountMenu" class="hidden" style="position:absolute;right:20px;top:52px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:240px;padding:8px;z-index:1500">
+  <div style="padding:10px 12px;border-bottom:1px solid var(--border);margin-bottom:6px">
+    <div class="small" style="color:var(--muted)">Angemeldet als</div>
+    <div id="accountEmail" style="font-weight:600;font-size:13px;word-break:break-all"></div>
+  </div>
+  <button onclick="confirmSyncNow()" style="display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--text);font-size:13px;border-radius:6px;cursor:pointer">☁️ Jetzt synchronisieren</button>
+  <button onclick="openChangeEmail()" style="display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--text);font-size:13px;border-radius:6px;cursor:pointer">📧 E-Mail ändern</button>
+  <button onclick="openChangePassword()" style="display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--text);font-size:13px;border-radius:6px;cursor:pointer">🔑 Passwort ändern</button>
+  <button onclick="signOutUser()" style="display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:var(--text);font-size:13px;border-radius:6px;cursor:pointer">↩ Abmelden</button>
+  <div style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
+    <button onclick="openDeleteAccount()" style="display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;color:#ff8a8a;font-size:13px;border-radius:6px;cursor:pointer">🗑 Konto löschen</button>
+  </div>
+</div>
+
+<!-- ===================== DELETE ACCOUNT MODAL ===================== -->
+<div id="deleteOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3100;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid #d9534f;border-radius:14px;padding:28px;width:100%;max-width:420px">
+    <h3 style="margin-top:0;color:#ff8a8a">Konto löschen?</h3>
+    <p class="small">Diese Aktion ist <strong>unwiderruflich</strong>. Alle deine Lernkarten, Vokabeln, Ordner und dein Fortschritt werden sowohl in der Cloud als auch lokal gelöscht.</p>
+    <p class="small">Zum Bestätigen tippe <strong>LÖSCHEN</strong> ein:</p>
+    <input id="deleteConfirmInput" placeholder="LÖSCHEN" autocomplete="off">
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="closeDeleteAccount()" style="flex:1">Abbrechen</button>
+      <button id="deleteConfirmBtn" onclick="confirmDeleteAccount()" style="flex:1;background:#d9534f;border-color:#d9534f;color:#fff">Konto löschen</button>
+    </div>
+    <div id="deleteError" class="hidden" style="background:#3a1e1e;border:1px solid #d9534f;color:#ffb3b3;padding:10px 14px;border-radius:8px;font-size:13px;margin-top:12px"></div>
+  </div>
+</div>
+
+<script>
+/* ===================== SUPABASE INIT ===================== */
+const SUPABASE_URL = "https://DEIN-PROJEKT.supabase.co";
+const SUPABASE_ANON_KEY = "DEIN-ANON-KEY";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ===================== STORAGE HELPERS ===================== */
+function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+function lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
+
+let cards = JSON.parse(lsGet("cards") || "[]");
+let vocab = JSON.parse(lsGet("vocab") || "[]");
+let index = 0, vocabIndex = 0, vFlip = false;
+let points = Number(lsGet("points") || 0);
+let correct = Number(lsGet("correct") || 0);
+let total = Number(lsGet("total") || 0);
+
+function save() {
+  lsSet("cards", JSON.stringify(cards));
+  lsSet("vocab", JSON.stringify(vocab));
+  lsSet("points", points);
+  lsSet("correct", correct);
+  lsSet("total", total);
+}
+
+const BUDDY_RIGHT = ["Richtig!", "Genau so!", "Stark, weiter so!", "Sehr gut!", "Das sitzt!", "Top gemacht!", "Perfekt!"];
+const BUDDY_WRONG = ["Nicht schlimm, das kommt wieder.", "Fast! Beim nächsten Mal klappt's.", "Kein Problem, so lernt man.", "Schau dir die Antwort in Ruhe an."];
+const buddyStreak = { quiz: 0, vocab: 0, mode: 0 };
+function buddyPick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+function buddySvg(mood) {
+  const dark = "#1a2140", body = "#6f8cff", belly = "#a9bbff", feet = "#4f6bdc";
+  const spark = mood === "sad" ? "#9aa5d6" : "#ffd166";
+  const eyeOpen = (dx, dy) =>
+    '<ellipse cx="47" cy="60" rx="9" ry="10.5" fill="#fff"/><ellipse cx="73" cy="60" rx="9" ry="10.5" fill="#fff"/>' +
+    '<circle cx="' + (47 + dx) + '" cy="' + (61 + dy) + '" r="5.2" fill="' + dark + '"/><circle cx="' + (73 + dx) + '" cy="' + (61 + dy) + '" r="5.2" fill="' + dark + '"/>' +
+    '<circle cx="' + (45.2 + dx) + '" cy="' + (58.5 + dy) + '" r="1.8" fill="#fff"/><circle cx="' + (71.2 + dx) + '" cy="' + (58.5 + dy) + '" r="1.8" fill="#fff"/>';
+  const line = (d, w) => '<path d="' + d + '" fill="none" stroke="' + dark + '" stroke-width="' + w + '" stroke-linecap="round"/>';
+  let face, extra = "", arms = "";
+  if (mood === "happy") { face = eyeOpen(0, -1) + '<path d="M49 75 Q60 94 71 75 Z" fill="' + dark + '"/>'; }
+  else if (mood === "cheer") {
+    face = line("M38 62 Q47 51 56 62", 3.5) + line("M64 62 Q73 51 82 62", 3.5) + '<path d="M47 74 Q60 98 73 74 Z" fill="' + dark + '"/>';
+    arms = '<path d="M24 74 Q8 60 13 40" fill="none" stroke="' + body + '" stroke-width="9" stroke-linecap="round"/><path d="M96 74 Q112 60 107 40" fill="none" stroke="' + body + '" stroke-width="9" stroke-linecap="round"/>';
+    extra = '<circle cx="12" cy="22" r="3" fill="#ff8fa3"/><circle cx="106" cy="18" r="3" fill="#7fd1ff"/><circle cx="28" cy="8" r="2.5" fill="#ffd166"/><circle cx="94" cy="6" r="2.5" fill="#ff8fa3"/><circle cx="4" cy="52" r="2.5" fill="#7fd1ff"/><circle cx="116" cy="50" r="2.5" fill="#ffd166"/>';
+  } else if (mood === "sad") {
+    face = eyeOpen(0, 3) + line("M38 51 L54 45", 3.5) + line("M82 51 L66 45", 3.5) + line("M52 87 Q60 79 68 87", 3) + '<path d="M37 74 Q33 82 37 85 Q41 82 37 74 Z" fill="#7fd1ff"/>';
+  } else { face = eyeOpen(1.5, 0) + line("M52 77 Q60 83 68 77", 3); }
+  return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<g fill="none" stroke="' + body + '" stroke-width="6" stroke-linecap="round"><path d="M60 36 Q58 24 60 15"/><path d="M42 41 Q34 31 28 29"/><path d="M78 41 Q86 31 92 29"/></g>' +
+    '<circle cx="60" cy="11" r="5.5" fill="' + spark + '"/><circle cx="26" cy="27" r="4.5" fill="' + spark + '"/><circle cx="94" cy="27" r="4.5" fill="' + spark + '"/>' +
+    arms +
+    '<ellipse cx="44" cy="108" rx="11" ry="6" fill="' + feet + '"/><ellipse cx="76" cy="108" rx="11" ry="6" fill="' + feet + '"/>' +
+    '<ellipse cx="60" cy="70" rx="40" ry="38" fill="' + body + '"/><ellipse cx="60" cy="88" rx="24" ry="16" fill="' + belly + '" opacity=".55"/>' +
+    '<circle cx="33" cy="77" r="6" fill="#ff8fa3" opacity=".5"/><circle cx="87" cy="77" r="6" fill="#ff8fa3" opacity=".5"/>' +
+    face + extra + '</svg>';
+}
+
+function buddy(where, mood, text) {
+  const box = document.getElementById("buddy-" + where);
+  if (!box) return;
+  const fig = box.querySelector(".buddy-fig");
+  if (fig.dataset.mood !== mood) { fig.innerHTML = buddySvg(mood); fig.dataset.mood = mood; }
+  fig.className = "buddy-fig"; void fig.offsetWidth; fig.classList.add(mood);
+  box.querySelector(".buddy-say").textContent = text;
+}
+
+function buddyReact(where, ok) {
+  const n = buddyStreak[where];
+  if (ok) buddy(where, "happy", n >= 3 && n % 3 === 0 ? n + " richtige in Folge! Weiter so!" : buddyPick(BUDDY_RIGHT));
+  else buddy(where, "sad", buddyPick(BUDDY_WRONG));
+}
+
+function buddyInit() {
+  buddy("home", "happy", "Hi, ich bin Nuri! Was möchtest du heute lernen?");
+  buddy("quiz", "idle", "Bereit? Zeig, was du weißt!");
+  buddy("vocab", "idle", "Kennst du die Übersetzung?");
+  buddy("mode", "idle", "Wähle einen Modus und leg los!");
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+}
+
+/* ===================== LERNKARTEN ===================== */
+function createCards() {
+  const text = document.getElementById("recognized").value;
+  const topic = document.getElementById("topicInput").value.trim().slice(0, 60);
+  if (!text.trim()) { alert("Kein Lernstoff vorhanden!"); return; }
+
+  const lines = text.split("\n").filter(x => x.trim().length > 2);
+  let added = 0;
+  lines.forEach(line => {
+    const match = line.match(/^(.{2,80}?)(?::|=|\t| – | - )(.+)$/);
+    if (match && match[2].trim()) {
+      cards.push({ question: "Was bedeutet: " + match[1].trim() + "?", answer: match[2].trim(), topic: topic || "Ohne Thema" });
+      added++;
+    }
+  });
+  if (added === 0) { alert("Keine eindeutigen Begriff-Erklärung-Paare gefunden. Schreibe pro Zeile „Begriff: Erklärung\"."); return; }
+  save(); index = cards.length - added; studyQueue = null;
+  alert(added + " Lernkarten erstellt!");
+  updateQuiz();
+  showTab("quiz", document.querySelector('[data-tab="quiz"]'));
+}
+
+function updateQuiz() {
+  const has = cards.length > 0;
+  document.getElementById("answerArea").textContent = "";
+  document.getElementById("feedback").classList.add("hidden");
+  document.getElementById("rating").classList.add("hidden");
+  document.getElementById("showAnswer").classList.toggle("hidden", !has);
+  if (!has) {
+    document.getElementById("question").textContent = "Noch keine Lernkarten vorhanden.";
+    document.getElementById("quizCounter").textContent = "";
+    buddy("quiz", "idle", "Erstelle zuerst ein paar Lernkarten, dann legen wir los.");
+    return;
+  }
+  index = index % cards.length;
+  buddy("quiz", "idle", "Bereit? Zeig, was du weißt!");
+  document.getElementById("question").textContent = cards[index].question;
+  document.getElementById("quizCounter").textContent = "Frage " + (index + 1) + " von " + cards.length;
+}
+
+function revealAnswer() {
+  if (!cards.length) return;
+  document.getElementById("answerArea").textContent = cards[index].answer;
+  document.getElementById("rating").classList.remove("hidden");
+  buddy("quiz", "idle", "Wusstest du es?");
+  document.getElementById("showAnswer").classList.add("hidden");
+}
+
+function nextQuestion(known) {
+  record(cards[index], known);
+  total++;
+  if (known) { points += 10; correct++; }
+  save(); updateStats();
+  buddyStreak.quiz = known ? buddyStreak.quiz + 1 : 0;
+  if (!advance()) buddyReact("quiz", known);
+}
+
+/* ===================== VOKABELN ===================== */
+function addVocab() {
+  const word = document.getElementById("word").value.trim();
+  const translation = document.getElementById("translation").value.trim();
+  if (!word || !translation) { alert("Bitte beide Felder ausfüllen!"); return; }
+  vocab.push({word, translation, lang: (document.getElementById("wordLang").value || "").trim()});
+  document.getElementById("word").value = "";
+  document.getElementById("translation").value = "";
+  save(); updateVocab();
+}
+
+function updateVocab() {
+  if (!vocab.length) {
+    document.getElementById("vocabQuestion").textContent = "Noch keine Vokabeln vorhanden.";
+    if (typeof renderVocabList === "function") renderVocabList();
+    document.getElementById("vocabAnswer").textContent = "";
+    buddy("vocab", "idle", "Füge Vokabeln hinzu, dann üben wir zusammen.");
+    return;
+  }
+  vocabIndex = vocabIndex % vocab.length;
+  buddy("vocab", "idle", "Kennst du die Übersetzung?");
+  vFlip = typeof pickFlip === "function" ? pickFlip() : false;
+  if (typeof refreshLangs === "function") refreshLangs();
+  if (typeof renderVocabList === "function") renderVocabList();
+  document.getElementById("vocabQuestion").textContent = (vFlip ? vocab[vocabIndex].translation : vocab[vocabIndex].word);
+  document.getElementById("vocabAnswer").textContent = "";
+  document.getElementById("vocabCount").textContent = vocab.length + " Vokabeln gespeichert" + (typeof vocabOpen === "function" ? ", " + vocabOpen().length + " zum Wiederholen" : "") + ".";
+  document.getElementById("vocabRating").classList.add("hidden");
+  document.getElementById("vocabEdit").classList.add("hidden");
+}
+
+function nextVocab() { if (!vocab.length) return; advanceVocab(); }
+
+function showVocabAnswer() {
+  if (!vocab.length) return;
+  document.getElementById("vocabAnswer").textContent = (vFlip ? vocab[vocabIndex].word : vocab[vocabIndex].translation);
+  document.getElementById("vocabRating").classList.remove("hidden");
+  buddy("vocab", "idle", "Wusstest du es?");
+}
+
+/* ===================== STATS ===================== */
+function updateStats() {
+  document.getElementById("points").textContent = points;
+  document.getElementById("correct").textContent = correct;
+  const percent = total ? Math.round(correct / total * 100) : 0;
+  document.getElementById("percentage").textContent = percent + " %";
+  document.getElementById("bar2").style.width = percent + "%";
+  if (typeof renderStats === "function") renderStats();
+}
+
+/* ===================== OCR ===================== */
+async function prepImage(file) {
+  const bmp = await createImageBitmap(file);
+  const big = Math.max(bmp.width, bmp.height);
+  const sc = big > 2200 ? 2200 / big : big < 1000 ? 2 : 1;
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(bmp.width * sc));
+  c.height = Math.max(1, Math.round(bmp.height * sc));
+  const ctx = c.getContext("2d");
+  ctx.drawImage(bmp, 0, 0, c.width, c.height);
+  const im = ctx.getImageData(0, 0, c.width, c.height);
+  const d = im.data;
+  let lo = 255, hi = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const g = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
+    d[i] = d[i + 1] = d[i + 2] = g;
+    if (g < lo) lo = g; if (g > hi) hi = g;
+  }
+  const span = Math.max(1, hi - lo);
+  for (let i = 0; i < d.length; i += 4) {
+    const v = ((d[i] - lo) * 255 / span) | 0;
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  ctx.putImageData(im, 0, 0);
+  return c;
+}
+
+async function ocrFile(file, lang, st) {
+  if (!window.Tesseract) { st.textContent = "Die Texterkennung konnte nicht geladen werden."; return ""; }
+  st.textContent = "Bild wird vorbereitet...";
+  try {
+    const canvas = await prepImage(file);
+    const r = await Tesseract.recognize(canvas, lang, { logger: m => {
+      if (m.status === "recognizing text") st.textContent = "Text wird erkannt... " + Math.round((m.progress || 0) * 100) + " %";
+      else if (/load|initializ/.test(m.status || "")) st.textContent = "Sprachdaten werden geladen...";
+    }});
+    const text = ((r && r.data && r.data.text) || "").trim();
+    if (!text) st.textContent = "Es wurde kein Text erkannt. Versuche ein schärferes Foto.";
+    return text;
+  } catch (e) {
+    st.textContent = "Fehler bei der Bilderkennung.";
+    return "";
+  }
+}
+
+async function scanImage() {
+  const file = document.getElementById("imageInput").files[0];
+  const st = document.getElementById("scanStatus");
+  const btn = document.getElementById("scanBtn");
+  if (!file) { st.textContent = "Bitte zuerst ein Bild auswählen."; return; }
+  btn.disabled = true;
+  try {
+    const text = await ocrFile(file, document.getElementById("ocrLang").value, st);
+    if (!text) return;
+    document.getElementById("recognized").value = text;
+    st.textContent = "Erkennung abgeschlossen. Bitte prüfe den Text.";
+  } finally { btn.disabled = false; }
+}
+
+function parseVocabLine(line) {
+  const m = String(line).replace(/[|¦]+/g, "  ").trim().match(/^(.{1,60}?)\s*(?:=|:|\t|–|—|\s-\s|\s{2,})\s*(.+)$/);
+  if (!m) return null;
+  const a = m[1].trim(), b = m[2].trim();
+  return a && b ? [a, b] : null;
+}
+
+async function scanVocabPage() {
+  const file = document.getElementById("vocabImage").files[0];
+  const st = document.getElementById("vocabScanStatus");
+  const btn = document.getElementById("vocabScanBtn");
+  if (!file) { st.textContent = "Bitte zuerst ein Foto auswählen."; return; }
+  btn.disabled = true;
+  try {
+    const text = await ocrFile(file, document.getElementById("vocabOcrLang").value + "+deu", st);
+    if (!text) return;
+    const lines = text.split("\n").map(x => x.trim()).filter(x => x.length > 2).map(l => {
+      const p = parseVocabLine(l);
+      return p ? p[0] + " = " + p[1] : l;
+    });
+    document.getElementById("vocabImportText").value = lines.join("\n");
+    document.getElementById("vocabImport").classList.remove("hidden");
+    st.textContent = "Erkennung abgeschlossen. Prüfe die Liste.";
+  } finally { btn.disabled = false; }
+}
+
+function importVocab() {
+  const sel = document.getElementById("vocabOcrLang");
+  const lang = sel.options[sel.selectedIndex].text;
+  const swap = document.getElementById("vocabOrder").value === "wf";
+  const st = document.getElementById("vocabScanStatus");
+  const key = v => (v.word + "|" + v.translation).toLowerCase();
+  const have = new Set(vocab.map(key));
+  let added = 0, skipped = 0;
+  document.getElementById("vocabImportText").value.split("\n").forEach(line => {
+    if (!line.trim()) return;
+    const p = parseVocabLine(line);
+    if (!p) { skipped++; return; }
+    const v = { word: swap ? p[1] : p[0], translation: swap ? p[0] : p[1], lang: lang };
+    if (have.has(key(v))) return;
+    have.add(key(v)); vocab.push(v); added++;
+  });
+  if (!added) { st.textContent = "Es wurden keine neuen Vokabeln übernommen."; return; }
+  vocabQueue = null; vocabIndex = vocab.length - added;
+  save(); updateVocab();
+  document.getElementById("vocabImportText").value = "";
+  document.getElementById("vocabImport").classList.add("hidden");
+  st.textContent = added + " Vokabeln übernommen" + (skipped ? ", " + skipped + " Zeilen übersprungen" : "") + ".";
+}
+
+/* ===================== FEEDBACK / RECORD ===================== */
+function showFeedback(parts) {
+  const fb = document.getElementById("feedback");
+  fb.replaceChildren();
+  parts.forEach(([text, head]) => {
+    const el = document.createElement(head ? "h3" : "p");
+    el.textContent = text;
+    fb.appendChild(el);
+  });
+  fb.classList.remove("hidden");
+  return fb;
+}
+
+let recent = (() => { try { return JSON.parse(lsGet("recent") || "[]"); } catch (e) { return []; } })();
+
+function record(c, ok) {
+  if (!c) return;
+  c.seen = (c.seen || 0) + 1;
+  if (!ok) c.wrong = (c.wrong || 0) + 1;
+  c.streak = ok ? (c.streak || 0) + 1 : 0;
+  if (!ok && typeof studyQueue !== "undefined" && studyQueue && studyQueue.indexOf(c) < 0) studyQueue.push(c);
+  c.box = ok ? Math.min((c.box || 0) + 1, 5) : 0;
+  c.due = Date.now() + [10, 1440, 2880, 5760, 11520, 23040][c.box] * 60000;
+  recent.push(ok ? 1 : 0); recent = recent.slice(-10);
+  lsSet("recent", JSON.stringify(recent));
+  save();
+}
+
+/* ===================== BIBLIOTHEK ===================== */
+async function getStore() { return null; }
+let libCur = ""; let libAll = [];
+
+async function libList() {
+  try { return JSON.parse(lsGet("folders") || "[]"); } catch (e) { return []; }
+}
+async function libPut(f) {
+  const all = await libList();
+  const i = all.findIndex(x => x.id === f.id);
+  if (i >= 0) all[i] = f; else all.push(f);
+  lsSet("folders", JSON.stringify(all));
+  window.syncPush && window.syncPush();
+}
+async function libDel(id) {
+  const all = (await libList()).filter(x => x.id !== id);
+  lsSet("folders", JSON.stringify(all));
+  window.syncPush && window.syncPush();
+}
+
+function libMsg(t) { document.getElementById("libStatus").textContent = t; }
+function libId() { return "folder_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function libKids(id) { return libAll.filter(f => (f.parent || "") === id); }
+function libNode(id) { return id ? libAll.find(f => f.id === id) : undefined; }
+function libPath(id) {
+  const p = []; let n = libNode(id), g = 0;
+  while (n && g++ < 50) { p.unshift(n); n = libNode(n.parent || ""); }
+  return p;
+}
+function libTree(id) {
+  const out = [id];
+  libKids(id).forEach(k => libTree(k.id).forEach(x => out.push(x)));
+  return out;
+}
+
+async function createFolder() {
+  const name = document.getElementById("folderName").value.trim().slice(0, 60);
+  if (!name) { libMsg("Bitte zuerst einen Ordnernamen eingeben."); return; }
+  if (libKids(libCur).some(f => f.name.toLowerCase() === name.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+  try {
+    await libPut({ id: libId(), name: name, parent: libCur, cards: [], vocab: [] });
+    document.getElementById("folderName").value = "";
+    libMsg("Ordner erstellt.");
+    await renderLibrary();
+  } catch (e) { libMsg("Speichern fehlgeschlagen."); }
+}
+
+async function saveHere(kind) {
+  const f = libNode(libCur); if (!f) return;
+  const src = kind === "cards" ? cards : vocab;
+  if (!src.length) { libMsg(kind === "cards" ? "Du hast noch keine Karten zum Speichern." : "Du hast noch keine Vokabeln zum Speichern."); return; }
+  const key = kind === "cards" ? (c => c.question) : (v => (v.word + "|" + v.translation).toLowerCase());
+  const have = new Set((f[kind] || []).map(key));
+  const fresh = JSON.parse(JSON.stringify(src)).filter(x => !have.has(key(x)));
+  f[kind] = (f[kind] || []).concat(fresh);
+  try {
+    await libPut(f);
+    libMsg((kind === "cards" ? "Karten" : "Vokabeln") + " in „" + f.name + "“ gespeichert (" + fresh.length + " neu, " + f[kind].length + " insgesamt).");
+    renderLibrary();
+  } catch (e) { libMsg("Speichern fehlgeschlagen."); }
+}
+
+function loadHere(kind) {
+  const f = libNode(libCur); if (!f) return;
+  const list = JSON.parse(JSON.stringify(f[kind] || []));
+  if (!list.length) { libMsg(kind === "cards" ? "In diesem Ordner sind keine Karten gespeichert." : "In diesem Ordner sind keine Vokabeln gespeichert."); return; }
+  if (kind === "cards") {
+    cards = list; index = 0; studyQueue = null; save(); updateQuiz();
+    showTab("quiz", document.querySelector('[data-tab="quiz"]'));
+  } else {
+    vocab = list; vocabIndex = 0; vocabQueue = null; save(); updateVocab();
+    showTab("vocab", document.querySelector('[data-tab="vocab"]'));
+  }
+}
+
+async function renderLibrary() {
+  const list = document.getElementById("folderList");
+  const crumbs = document.getElementById("libCrumbs");
+  const box = document.getElementById("libContent");
+  document.getElementById("libMode").textContent = "Wird in deinem Konto gespeichert, sofern du angemeldet bist.";
+  list.textContent = "Lädt...";
+  try { libAll = await libList(); } catch (e) { list.textContent = "Ordner konnten nicht geladen werden."; return; }
+  if (libCur && !libNode(libCur)) libCur = "";
+
+  crumbs.replaceChildren();
+  const path = libPath(libCur);
+  const crumb = (label, id, last) => {
+    if (last) { const s = document.createElement("strong"); s.textContent = label; crumbs.appendChild(s); return; }
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.onclick = () => { libCur = id; renderLibrary(); };
+    crumbs.appendChild(b);
+  };
+  crumb("Bibliothek", "", path.length === 0);
+  path.forEach((n, i) => {
+    const sep = document.createElement("span"); sep.className = "small"; sep.textContent = "/"; crumbs.appendChild(sep);
+    crumb(n.name, n.id, i === path.length - 1);
+  });
+
+  box.replaceChildren();
+  const cur = libNode(libCur);
+  if (!cur) {
+    box.textContent = "Erstelle zuerst einen Ordner und öffne ihn, um Karten oder Vokabeln darin zu speichern.";
+  } else {
+    const info = document.createElement("p");
+    info.textContent = (cur.cards || []).length + " Karten · " + (cur.vocab || []).length + " Vokabeln · " + libKids(cur.id).length + " Unterordner";
+    box.appendChild(info);
+    const row = document.createElement("div"); row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px";
+    const add = (label, fn) => { const b = document.createElement("button"); b.textContent = label; b.onclick = fn; row.appendChild(b); };
+    add("Aktuelle Karten hier speichern", () => saveHere("cards"));
+    add("Aktuelle Vokabeln hier speichern", () => saveHere("vocab"));
+    add("Karten laden (" + (cur.cards || []).length + ")", () => loadHere("cards"));
+    add("Vokabeln laden (" + (cur.vocab || []).length + ")", () => loadHere("vocab"));
+    box.appendChild(row);
+  }
+
+  list.replaceChildren();
+  const kids = libKids(libCur).sort((a, b) => a.name.localeCompare(b.name));
+  if (!kids.length) { list.textContent = "Keine Unterordner hier."; return; }
+  kids.forEach(f => {
+    const card = document.createElement("div"); card.className = "card";
+    const h = document.createElement("h3"); h.textContent = f.name;
+    const n = document.createElement("p"); n.className = "small";
+    n.textContent = (f.cards || []).length + " Karten · " + (f.vocab || []).length + " Vokabeln · " + libKids(f.id).length + " Unterordner";
+    const inp = document.createElement("input"); inp.value = f.name;
+    const selLabel = document.createElement("p"); selLabel.className = "small"; selLabel.textContent = "Verschieben nach";
+    const sel = document.createElement("select");
+    sel.appendChild(new Option("Bibliothek (oberste Ebene)", ""));
+    const banned = new Set(libTree(f.id));
+    libAll.filter(x => !banned.has(x.id))
+      .map(x => ({ id: x.id, label: libPath(x.id).map(q => q.name).join(" / ") }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .forEach(o => sel.appendChild(new Option(o.label, o.id)));
+    sel.value = f.parent || "";
+    const row = document.createElement("div"); row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px";
+    const mk = (label, fn) => { const b = document.createElement("button"); b.textContent = label; b.onclick = () => fn(b); row.appendChild(b); return b; };
+    mk("Öffnen", () => { libCur = f.id; renderLibrary(); });
+    mk("Verschieben", async () => {
+      const target = sel.value; if (target === (f.parent || "")) return;
+      if (libKids(target).some(x => x.name.toLowerCase() === f.name.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+      try { f.parent = target; await libPut(f); libMsg("Ordner verschoben."); renderLibrary(); } catch (e) { libMsg("Verschieben fehlgeschlagen."); }
+    });
+    mk("Umbenennen", async () => {
+      const nn = inp.value.trim().slice(0, 60); if (!nn) return;
+      if (libKids(libCur).some(x => x.id !== f.id && x.name.toLowerCase() === nn.toLowerCase())) { libMsg("Diesen Ordner gibt es hier schon."); return; }
+      try { f.name = nn; await libPut(f); renderLibrary(); } catch (e) { libMsg("Umbenennen fehlgeschlagen."); }
+    });
+    let armed = false;
+    mk("Löschen", async b => {
+      if (!armed) { armed = true; b.textContent = "Wirklich löschen?"; setTimeout(() => { armed = false; b.textContent = "Löschen"; }, 4000); return; }
+      try { for (const id of libTree(f.id)) await libDel(id); renderLibrary(); } catch (e) { libMsg("Löschen fehlgeschlagen."); }
+    });
+    card.append(h, n, inp, selLabel, sel, row);
+    list.appendChild(card);
+  });
+  const warn = document.createElement("p");
+  warn.className = "small";
+  warn.textContent = "Beim Löschen werden auch alle Unterordner gelöscht.";
+  list.appendChild(warn);
+}
+
+/* ===================== QUIZ-QUEUE / STATS ===================== */
+let studyQueue = null;
+
+function advance() {
+  if (studyQueue) {
+    let next = null;
+    while (studyQueue.length && next === null) {
+      const c = studyQueue.shift();
+      if (cards.indexOf(c) >= 0) next = c;
+    }
+    if (next) { index = cards.indexOf(next); updateQuiz(); return; }
+    studyQueue = null; updateQuiz();
+    showFeedback([["Geschafft!", true], ["Alle Karten dieser Übungsrunde sind durch."]]);
+    buddy("quiz", "cheer", "Geschafft! Die Runde ist durch.");
+    return true;
+  }
+  index = (index + 1) % cards.length; updateQuiz();
+}
+
+function startQueue(list, label) {
+  const msg = document.getElementById("planInfo");
+  if (!list.length) { msg.textContent = "Aktuell gibt es nichts zu üben: " + label + "."; showFeedback([["Aktuell gibt es nichts zu üben: " + label + "."]]); return; }
+  studyQueue = list.slice();
+  index = cards.indexOf(studyQueue.shift());
+  showTab("quiz", document.querySelector('[data-tab="quiz"]'));
+  updateQuiz();
+  showFeedback([["" + label, true], [(studyQueue.length + 1) + " Karten in dieser Runde."]]);
+}
+
+function weakCards() {
+  return cards.filter(c => c.wrong && (c.streak || 0) < 2).sort((a, b) => (b.wrong / (b.seen || 1)) - (a.wrong / (a.seen || 1)) || b.wrong - a.wrong);
+}
+function dueCards() {
+  const now = Date.now();
+  return cards.filter(c => (c.due || 0) <= now).sort((a, b) => (a.due || 0) - (b.due || 0));
+}
+function practiceWeak() { startQueue(weakCards(), "Schwächen üben"); }
+function practiceDue() { startQueue(dueCards(), "Fällige Karten"); }
+
+function renderStats() {
+  const ts = document.getElementById("topicStats");
+  if (!ts) return;
+  const T = {};
+  cards.forEach(c => {
+    const t = c.topic || "Ohne Thema";
+    const o = T[t] || (T[t] = { n: 0, seen: 0, wrong: 0 });
+    o.n++; o.seen += c.seen || 0; o.wrong += c.wrong || 0;
+  });
+  ts.replaceChildren();
+  const names = Object.keys(T);
+  if (!names.length) ts.textContent = "Noch keine Karten. Erstelle zuerst welche unter „Bild scannen“.";
+  names.sort((a, b) => {
+    const pa = T[a].seen ? 1 - T[a].wrong / T[a].seen : 2, pb = T[b].seen ? 1 - T[b].wrong / T[b].seen : 2;
+    return pa - pb;
+  });
+  names.forEach(t => {
+    const o = T[t];
+    const pct = o.seen ? Math.round((1 - o.wrong / o.seen) * 100) : null;
+    const p = document.createElement("p");
+    p.textContent = t + " · " + o.n + " Karten · " + (pct === null ? "noch nicht geübt" : pct + " % richtig (" + (o.seen - o.wrong) + " von " + o.seen + ")");
+    const bar = document.createElement("div");
+    bar.style.cssText = "height:9px;background:#303d5c;border-radius:10px;overflow:hidden;margin-bottom:14px";
+    const fill = document.createElement("div");
+    fill.style.cssText = "height:100%;width:" + (pct || 0) + "%;background:" + (pct === null ? "#303d5c" : pct >= 80 ? "#3fb27f" : pct >= 50 ? "#e0a93b" : "#d9534f");
+    bar.appendChild(fill); ts.append(p, bar);
+  });
+
+  const wl = document.getElementById("weakList");
+  wl.replaceChildren();
+  const weak = weakCards().slice(0, 5);
+  if (!weak.length) wl.textContent = "Noch keine Fehler – weiter so!";
+  weak.forEach(c => {
+    const p = document.createElement("p");
+    p.textContent = "• " + String(c.question).slice(0, 90) + " (" + c.wrong + " von " + c.seen + " falsch)";
+    wl.appendChild(p);
+  });
+
+  const now = Date.now(), day = 86400000;
+  const due = dueCards().length;
+  const soon = cards.filter(c => (c.due || 0) > now && c.due <= now + day).length;
+  const week = cards.filter(c => c.due > now + day && c.due <= now + 7 * day).length;
+  document.getElementById("planInfo").textContent = "Jetzt fällig: " + due + " · In den nächsten 24 h: " + soon + " · Diese Woche: " + week + ".";
+}
+
+/* ===================== VOCAB-INTERN ===================== */
+let vocabQueue = null;
+function vocabOpen() { return vocab.filter(v => v.wrong && (v.streak || 0) < 2 && inLang(v)); }
+function advanceVocab() {
+  if (vocabQueue) {
+    let n = null;
+    while (vocabQueue.length && n === null) {
+      const v = vocabQueue.shift();
+      if (vocab.indexOf(v) >= 0) n = v;
+    }
+    if (n) { vocabIndex = vocab.indexOf(n); updateVocab(); return; }
+    vocabQueue = null; updateVocab();
+    document.getElementById("vocabCount").textContent = "Runde beendet: alle Fehler-Vokabeln der Runde sitzen.";
+    buddy("vocab", "cheer", "Runde geschafft! Das sitzt jetzt.");
+    return true;
+  }
+  for (let k = 1; k <= vocab.length; k++) {
+    const i = (vocabIndex + k) % vocab.length;
+    if (inLang(vocab[i])) { vocabIndex = i; break; }
+  }
+  updateVocab();
+}
+function rateVocab(ok) {
+  const v = vocab[vocabIndex]; if (!v) return;
+  v.seen = (v.seen || 0) + 1;
+  if (ok) { v.streak = (v.streak || 0) + 1; }
+  else { v.wrong = (v.wrong || 0) + 1; v.streak = 0; if (vocabQueue && vocabQueue.indexOf(v) < 0) vocabQueue.push(v); }
+  save();
+  buddyStreak.vocab = ok ? buddyStreak.vocab + 1 : 0;
+  if (!advanceVocab()) buddyReact("vocab", ok);
+}
+function practiceVocabErrors() {
+  const c = document.getElementById("vocabCount");
+  const list = vocabOpen();
+  if (!list.length) { c.textContent = "Keine offenen Fehler. Alles sitzt."; return; }
+  vocabQueue = list.slice();
+  vocabIndex = vocab.indexOf(vocabQueue.shift());
+  updateVocab();
+  c.textContent = "Fehler-Runde: " + list.length + " Vokabeln.";
+}
+function inLang(v) { const f = document.getElementById("vocabLang").value; return !f || v.lang === f; }
+function pickFlip() { const d = document.getElementById("vocabDir").value; return d === "wf" || (d === "mix" && Math.random() < 0.5); }
+function refreshLangs() {
+  const sel = document.getElementById("vocabLang");
+  const cur = sel.value;
+  const langs = [...new Set(vocab.map(v => v.lang).filter(Boolean))].sort();
+  if (sel.options.length - 1 === langs.length && langs.every((l, i) => sel.options[i + 1].value === l)) return;
+  sel.replaceChildren();
+  sel.appendChild(new Option("Alle Sprachen", ""));
+  langs.forEach(l => sel.appendChild(new Option(l, l)));
+  sel.value = langs.indexOf(cur) >= 0 ? cur : "";
+}
+function vocabFilterChanged() { vocabQueue = null; const i = vocab.findIndex(inLang); if (i >= 0) vocabIndex = i; updateVocab(); }
+function editVocab() {
+  const v = vocab[vocabIndex]; if (!v) return;
+  document.getElementById("editWord").value = v.word;
+  document.getElementById("editTrans").value = v.translation;
+  document.getElementById("vocabEdit").classList.remove("hidden");
+}
+function saveVocabEdit() {
+  const v = vocab[vocabIndex];
+  const w = document.getElementById("editWord").value.trim();
+  const t = document.getElementById("editTrans").value.trim();
+  if (!v || !w || !t) return;
+  v.word = w; v.translation = t; save(); updateVocab();
+}
+function cancelVocabEdit() { document.getElementById("vocabEdit").classList.add("hidden"); }
+
+(function () {
+  const card = document.getElementById("vocabQuestion").parentNode;
+  card.style.cursor = "pointer";
+  card.addEventListener("click", () => showVocabAnswer());
+})();
+
+let shownVocab = [];
+function renderVocabList() {
+  const box = document.getElementById("vocabList"); if (!box) return;
+  const q = document.getElementById("vocabSearch").value.trim().toLowerCase();
+  shownVocab = vocab.filter(v => inLang(v) && (!q || (v.word + " " + v.translation).toLowerCase().indexOf(q) >= 0));
+  box.replaceChildren();
+  const del = document.getElementById("vocabDelAll");
+  del.classList.toggle("hidden", !shownVocab.length);
+  del.textContent = "Alle angezeigten löschen";
+  if (!shownVocab.length) { box.textContent = vocab.length ? "Keine Treffer." : "Noch keine Vokabeln vorhanden."; return; }
+  const info = document.createElement("p"); info.className = "small";
+  info.textContent = shownVocab.length + " Treffer";
+  box.appendChild(info);
+  shownVocab.slice(0, 100).forEach(v => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)";
+    const t = document.createElement("span"); t.style.flex = "1";
+    t.textContent = v.word + " = " + v.translation + (v.lang ? " (" + v.lang + ")" : "");
+    const be = document.createElement("button"); be.textContent = "Bearbeiten";
+    be.onclick = () => { vocabIndex = vocab.indexOf(v); vocabQueue = null; updateVocab(); editVocab(); document.getElementById("vocabEdit").scrollIntoView({ block: "center" }); };
+    const bd = document.createElement("button"); bd.textContent = "Löschen";
+    let armed = false;
+    bd.onclick = () => {
+      if (!armed) { armed = true; bd.textContent = "Wirklich löschen?"; setTimeout(() => { armed = false; bd.textContent = "Löschen"; }, 4000); return; }
+      const i = vocab.indexOf(v);
+      if (i >= 0) { vocab.splice(i, 1); if (vocabIndex > i) vocabIndex--; save(); updateVocab(); }
+    };
+    row.append(t, be, bd); box.appendChild(row);
+  });
+  if (shownVocab.length > 100) {
+    const more = document.createElement("p"); more.className = "small";
+    more.textContent = "Es werden die ersten 100 angezeigt.";
+    box.appendChild(more);
+  }
+}
+
+let delAllArmed = false;
+function deleteShownVocab(btn) {
+  if (!shownVocab.length) return;
+  if (!delAllArmed) {
+    delAllArmed = true; btn.textContent = "Wirklich alle " + shownVocab.length + " löschen?";
+    setTimeout(() => { delAllArmed = false; btn.textContent = "Alle angezeigten löschen"; }, 4000);
+    return;
+  }
+  delAllArmed = false;
+  const gone = new Set(shownVocab);
+  vocab = vocab.filter(v => !gone.has(v));
+  vocabIndex = 0; vocabQueue = null;
+  save(); updateVocab();
+}
+</script>
+
+<script>
+/* ===================== LERNMODI + XP/LEVEL/ACHIEVEMENTS ===================== */
+(function () {
+  const LEVELS = [0, 100, 250, 500, 900, 1500, 2400, 3600, 5200, 7200];
+  const G = {
+    xp: Number(lsGet("xp") || 0),
+    level: Number(lsGet("level") || 1),
+    ach: JSON.parse(lsGet("achievements") || "[]"),
+    streak: JSON.parse(lsGet("streakDays") || '{"last":0,"count":0}'),
+    modeStats: JSON.parse(lsGet("modeStats") || "{}"),
+  };
+  const saveG = () => {
+    lsSet("xp", G.xp); lsSet("level", G.level);
+    lsSet("achievements", JSON.stringify(G.ach));
+    lsSet("streakDays", JSON.stringify(G.streak));
+    lsSet("modeStats", JSON.stringify(G.modeStats));
+    window.syncPush && window.syncPush();
+  };
+
+  const levelFor = xp => { let l = 1; for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i]) l = i + 1; return l; };
+  const nextLevelXP = () => LEVELS[G.level] ?? (LEVELS[LEVELS.length - 1] + 2000);
+  const prevLevelXP = () => LEVELS[G.level - 1] ?? 0;
+
+  function addXP(n) {
+    if (!n) return;
+    G.xp += n;
+    const nl = levelFor(G.xp);
+    if (nl > G.level) { G.level = nl; buddy("mode", "cheer", "Level " + nl + " erreicht!"); showToast("🎉 Level " + nl + " erreicht!"); }
+    saveG(); renderXP();
+    checkAchievements();
+  }
+  window.addXP = addXP;
+
+  function bumpDailyStreak() {
+    const today = new Date().toDateString();
+    const last = G.streak.last ? new Date(G.streak.last).toDateString() : "";
+    if (last === today) return;
+    const y = new Date(Date.now() - 86400000).toDateString();
+    G.streak.count = (last === y) ? G.streak.count + 1 : 1;
+    G.streak.last = Date.now();
+    saveG(); renderXP();
+  }
+
+  const ACH = [
+    { id: "first", name: "Erste richtige Antwort", test: () => correct >= 1 },
+    { id: "ten", name: "10 Fragen richtig", test: () => correct >= 10 },
+    { id: "streak5", name: "5 richtige hintereinander", test: () => (buddyStreak.quiz || 0) >= 5 },
+    { id: "hundred", name: "100 Fragen gelernt", test: () => total >= 100 },
+    { id: "lvl5", name: "Level 5 erreicht", test: () => G.level >= 5 },
+    { id: "modes", name: "Alle Modi einmal gespielt", test: () => Object.keys(G.modeStats).length >= 9 },
+  ];
+  function checkAchievements() {
+    ACH.forEach(a => {
+      if (!G.ach.includes(a.id) && a.test()) {
+        G.ach.push(a.id); saveG();
+        showToast("🏆 Erfolg: " + a.name);
+        G.xp += 25; saveG(); renderXP();
+      }
+    });
+    renderAchievements();
+  }
+  function renderAchievements() {
+    const box = document.getElementById("achList"); if (!box) return;
+    box.replaceChildren();
+    ACH.forEach(a => {
+      const p = document.createElement("p");
+      p.textContent = (G.ach.includes(a.id) ? "✅ " : "⬜ ") + a.name;
+      box.appendChild(p);
+    });
+  }
+
+  function renderXP() {
+    const lvlEl = document.getElementById("xpLevel"); if (!lvlEl) return;
+    lvlEl.textContent = "Level " + G.level;
+    document.getElementById("xpText").textContent = G.xp + " XP · " + (nextLevelXP() - G.xp) + " bis Level " + (G.level + 1);
+    const span = nextLevelXP() - prevLevelXP();
+    document.getElementById("xpBar").style.width = Math.min(100, Math.round(((G.xp - prevLevelXP()) / span) * 100)) + "%";
+    document.getElementById("streakInfo").textContent = "🔥 " + G.streak.count + " Tag" + (G.streak.count === 1 ? "" : "e");
+  }
+  window.renderXP = renderXP;
+
+  const MODES = [
+    { id: "normal", icon: "🧠", name: "Normaler Lernmodus" },
+    { id: "sprint", icon: "⚡", name: "Schnelltest (10 Fragen)" },
+    { id: "mc", icon: "🎯", name: "Multiple Choice" },
+    { id: "free", icon: "✍️", name: "Freitext-Modus" },
+    { id: "match", icon: "🔄", name: "Zuordnungsmodus" },
+    { id: "cloze", icon: "📝", name: "Lückentext" },
+    { id: "hard", icon: "💀", name: "Schwieriger Modus" },
+    { id: "weak", icon: "🧩", name: "Schwächen-Modus" },
+    { id: "exam", icon: "📚", name: "Prüfungssimulation" },
+    { id: "hint", icon: "💡", name: "Lernmodus mit Tipps" },
+  ];
+
+  function renderGrid() {
+    const g = document.getElementById("modeGrid"); if (!g) return;
+    g.replaceChildren();
+    MODES.forEach(m => {
+      const b = document.createElement("button");
+      b.innerHTML = "<div class='mode-icon'>" + m.icon + "</div><span class='mode-name'>" + m.name + "</span>";
+      b.onclick = () => startMode(m.id);
+      g.appendChild(b);
+    });
+  }
+
+  const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+  function intelligentPick(n) {
+    const weak = cards.filter(c => c.wrong && (c.streak || 0) < 2);
+    const due = cards.filter(c => (c.due || 0) <= Date.now());
+    const rest = cards.filter(c => !weak.includes(c) && !due.includes(c));
+    return [...shuffle(weak), ...shuffle(due), ...shuffle(rest)].slice(0, n);
+  }
+
+  let S = null;
+
+  function startMode(id) {
+    if (!cards.length) { showToast("Erstelle zuerst Lernkarten."); return; }
+    bumpDailyStreak();
+    const M = MODES.find(m => m.id === id);
+    S = { mode: id, queue: [], idx: 0, correct: 0, wrong: 0, startedAt: Date.now(), _matchSel: null, _matchDone: 0, _matchTotal: 0 };
+    document.getElementById("modeGrid").classList.add("hidden");
+    document.getElementById("modePlay").classList.remove("hidden");
+    document.getElementById("modeResult").classList.add("hidden");
+    document.getElementById("modeInfo").textContent = M.name;
+    G.modeStats[id] = G.modeStats[id] || { played: 0, correct: 0, wrong: 0 };
+    saveG();
+
+    if (id === "normal" || id === "hint" || id === "sprint" || id === "mc" || id === "weak") S.queue = intelligentPick(10);
+    else if (id === "free") S.queue = intelligentPick(8);
+    else if (id === "cloze") S.queue = intelligentPick(8).filter(c => (c.answer || "").split(/\s+/).length >= 3);
+    else if (id === "hard") S.queue = intelligentPick(8);
+    else if (id === "exam") S.queue = intelligentPick(12);
+    else if (id === "match") S.queue = intelligentPick(4).slice(0, 4);
+
+    if (id === "weak" && !S.queue.length) { showToast("Keine Schwächen vorhanden – stark!"); exitMode(); return; }
+    if (id === "cloze" && !S.queue.length) { showToast("Nicht genug Text-Antworten für Lückentext."); exitMode(); return; }
+    if (id === "match") { renderMatch(); return; }
+    renderStep();
+  }
+  window.startMode = startMode;
+
+  function exitMode() {
+    S = null;
+    document.getElementById("modeGrid").classList.remove("hidden");
+    document.getElementById("modePlay").classList.add("hidden");
+    document.getElementById("modeBody").replaceChildren();
+    document.getElementById("modeQuestion").textContent = "…";
+    document.getElementById("modeResult").classList.add("hidden");
+    renderXP(); renderAchievements();
+  }
+  window.exitMode = exitMode;
+
+  function renderStep() {
+    const c = S.queue[S.idx];
+    if (!c) return finishMode();
+    document.getElementById("modeQuestion").textContent = c.question;
+    const body = document.getElementById("modeBody");
+    body.replaceChildren();
+    const id = S.mode;
+    if (id === "normal" || id === "sprint" || id === "hard" || id === "hint" || id === "exam") {
+      const btn = document.createElement("button");
+      btn.className = "action"; btn.textContent = "Antwort anzeigen";
+      btn.onclick = () => revealPlain(c);
+      body.appendChild(btn);
+    }
+    else if (id === "mc") renderMC(c, body);
+    else if (id === "free") renderFree(c, body);
+    else if (id === "cloze") renderCloze(c, body);
+  }
+
+  function revealPlain(c) {
+    const body = document.getElementById("modeBody");
+    body.replaceChildren();
+    if (S.mode === "hint") {
+      const h = document.createElement("p"); h.className = "small";
+      h.textContent = "Tipp: " + buildHint(c);
+      body.appendChild(h);
+    }
+    const p = document.createElement("p");
+    p.textContent = "Antwort: " + c.answer;
+    body.appendChild(p);
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:10px";
+    const ok = document.createElement("button"); ok.textContent = "Gewusst"; ok.onclick = () => answer(true, c);
+    const no = document.createElement("button"); no.textContent = "Noch nicht"; no.onclick = () => answer(false, c);
+    row.append(ok, no); body.appendChild(row);
+  }
+
+  function buildHint(c) {
+    const words = (c.answer || "").split(/\s+/).filter(Boolean);
+    if (!words.length) return "—";
+    return words[0] + " … (" + words.length + " Wörter)";
+  }
+
+  function renderMC(c, body) {
+    const others = shuffle(cards.filter(x => x !== c)).slice(0, 3).map(x => x.answer);
+    const opts = shuffle([c.answer, ...others]);
+    opts.forEach(o => {
+      const b = document.createElement("button");
+      b.style.cssText = "display:block;width:100%;text-align:left;margin:6px 0";
+      b.textContent = o;
+      b.onclick = () => {
+        const ok = o === c.answer;
+        body.querySelectorAll("button").forEach(x => {
+          x.disabled = true;
+          if (x.textContent === c.answer) x.style.borderColor = "#3fb27f";
+        });
+        if (!ok) b.style.borderColor = "#d9534f";
+        answer(ok, c);
+      };
+      body.appendChild(b);
+    });
+  }
+
+  function renderFree(c, body) {
+    const ta = document.createElement("textarea");
+    ta.placeholder = "Deine Antwort in eigenen Worten...";
+    body.appendChild(ta);
+    const b = document.createElement("button");
+    b.className = "action"; b.textContent = "Prüfen";
+    b.onclick = () => {
+      const ok = similarity(ta.value, c.answer) >= 0.4;
+      const p = document.createElement("p");
+      p.textContent = (ok ? "✅ " : "❌ ") + "Muster: " + c.answer;
+      body.appendChild(p); b.remove();
+      answer(ok, c);
+    };
+    body.appendChild(b);
+  }
+
+  function tokens(s) { return String(s).toLowerCase().replace(/[^\p{L}\p{N} ]/gu, " ").split(/\s+/).filter(w => w.length > 2); }
+  function similarity(a, b) {
+    const A = new Set(tokens(a)), B = new Set(tokens(b));
+    if (!A.size || !B.size) return 0;
+    let inter = 0; A.forEach(w => { if (B.has(w)) inter++; });
+    return inter / Math.max(A.size, B.size);
+  }
+
+  function renderCloze(c, body) {
+    const words = (c.answer || "").split(/\s+/).filter(Boolean);
+    const idxs = shuffle(words.map((_, i) => i)).filter(i => words[i].length > 3).slice(0, Math.max(1, Math.min(2, Math.floor(words.length / 3))));
+    if (!idxs.length) { revealPlain(c); return; }
+    const masked = words.map((w, i) => idxs.includes(i) ? "_____" : w).join(" ");
+    const q = document.createElement("p"); q.textContent = masked; body.appendChild(q);
+    const inp = document.createElement("input"); inp.placeholder = "Fehlende Wörter (Komma-getrennt)"; body.appendChild(inp);
+    const b = document.createElement("button"); b.className = "action"; b.textContent = "Prüfen";
+    b.onclick = () => {
+      const given = inp.value.toLowerCase().split(/[,;]/).map(x => x.trim());
+      const want = idxs.map(i => words[i].toLowerCase());
+      const ok = want.every(w => given.includes(w));
+      const p = document.createElement("p");
+      p.textContent = (ok ? "✅ " : "❌ ") + "Lösung: " + idxs.map(i => words[i]).join(", ");
+      body.appendChild(p); b.remove();
+      answer(ok, c);
+    };
+    body.appendChild(b);
+  }
+
+  function renderMatch() {
+    const set = S.queue;
+    const body = document.getElementById("modeBody");
+    document.getElementById("modeQuestion").textContent = "Ordne Begriffe und Definitionen zu:";
+    body.replaceChildren();
+    const left = shuffle(set.slice());
+    const right = shuffle(set.slice());
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:12px";
+    const L = document.createElement("div"), R = document.createElement("div");
+    left.forEach(c => {
+      const b = document.createElement("button");
+      b.style.cssText = "display:block;width:100%;text-align:left;margin:6px 0";
+      b.textContent = c.question; b.dataset.id = cards.indexOf(c);
+      b.onclick = () => selectMatch(b, "L");
+      L.appendChild(b);
+    });
+    right.forEach(c => {
+      const b = document.createElement("button");
+      b.style.cssText = "display:block;width:100%;text-align:left;margin:6px 0";
+      b.textContent = c.answer; b.dataset.id = cards.indexOf(c);
+      b.onclick = () => selectMatch(b, "R");
+      R.appendChild(b);
+    });
+    wrap.append(L, R); body.appendChild(wrap);
+    S._matchSel = null; S._matchDone = 0; S._matchTotal = set.length;
+  }
+
+  function selectMatch(btn, side) {
+    if (!S._matchSel) { S._matchSel = { btn, side }; btn.classList.add("active"); return; }
+    if (S._matchSel.side === side) { S._matchSel.btn.classList.remove("active"); S._matchSel = { btn, side }; btn.classList.add("active"); return; }
+    const a = S._matchSel.btn, b = btn;
+    const ok = a.dataset.id === b.dataset.id;
+    a.classList.remove("active");
+    a.style.borderColor = ok ? "#3fb27f" : "#d9534f";
+    b.style.borderColor = ok ? "#3fb27f" : "#d9534f";
+    a.disabled = b.disabled = true;
+    S._matchSel = null;
+    if (ok) { S.correct++; S._matchDone++; const c = cards[Number(a.dataset.id)]; record(c, true); addXP(10); }
+    else { S.wrong++; const c = cards[Number(a.dataset.id)] || cards[Number(b.dataset.id)]; if (c) record(c, false); }
+    if (S._matchDone + S.wrong >= S._matchTotal) setTimeout(finishMode, 500);
+  }
+
+  function answer(ok, c) {
+    if (ok) { S.correct++; addXP(10 + (buddyStreak.quiz >= 3 ? 5 : 0)); buddyStreak.quiz++; }
+    else { S.wrong++; buddyStreak.quiz = 0; }
+    record(c, ok);
+    total++;
+    if (ok) { points += 10; correct++; }
+    save(); if (typeof updateStats === "function") updateStats();
+    const st = G.modeStats[S.mode]; st.played++; st[ok ? "correct" : "wrong"]++;
+    saveG();
+    buddyReact("mode", ok);
+    S.idx++;
+    setTimeout(() => { if (S.idx >= S.queue.length) finishMode(); else renderStep(); }, 500);
+  }
+
+  function finishMode() {
+    document.getElementById("modeBody").replaceChildren();
+    document.getElementById("modeQuestion").textContent = "";
+    const R = document.getElementById("modeResult");
+    R.classList.remove("hidden"); R.replaceChildren();
+    const n = S.correct + S.wrong;
+    const pct = n ? Math.round(S.correct / n * 100) : 0;
+    const h = document.createElement("h3"); h.textContent = "Auswertung";
+    const p1 = document.createElement("p"); p1.textContent = "Richtig: " + S.correct + " · Falsch: " + S.wrong + " · " + pct + " %";
+    const p2 = document.createElement("p"); p2.textContent = "Verdiente XP: " + (S.correct * 10);
+    R.append(h, p1, p2);
+    const weakest = cards.filter(c => c.wrong).sort((a, b) => (b.wrong / (b.seen || 1)) - (a.wrong / (a.seen || 1))).slice(0, 3);
+    if (weakest.length) {
+      const wp = document.createElement("p"); wp.className = "small";
+      wp.textContent = "Schwächste Themen: " + [...new Set(weakest.map(c => c.topic || "Ohne Thema"))].join(", ");
+      R.appendChild(wp);
+    }
+    const ok = document.createElement("button");
+    ok.textContent = "Zurück zur Modusauswahl"; ok.className = "action";
+    ok.onclick = exitMode; R.appendChild(ok);
+    checkAchievements();
+  }
+
+  setTimeout(() => {
+    renderGrid(); renderXP(); renderAchievements();
+    buddy("mode", "idle", "Wähle einen Modus und leg los!");
+  }, 0);
+})();
+</script>
+
+<script>
+/* ===================== SUPABASE AUTH + SYNC ===================== */
+(function () {
+  const SYNC_KEYS = [
+    "cards", "vocab", "points", "correct", "total",
+    "folders", "recent",
+    "xp", "level", "achievements", "streakDays", "modeStats"
+  ];
+
+  let currentUser = null;
+  let pushTimer = null;
+  let pushInFlight = false;
+  let authMode = "signin";
+
+  function authError(msg) {
+    const el = document.getElementById("authError");
+    if (!el) return;
+    if (!msg) { el.classList.add("hidden"); el.textContent = ""; return; }
+    el.textContent = msg; el.classList.remove("hidden");
+  }
+
+  function collectLocal() {
+    const out = {};
+    SYNC_KEYS.forEach(k => {
+      const v = lsGet(k); if (v === null) return;
+      try { out[k] = JSON.parse(v); } catch { out[k] = v; }
+    });
+    return out;
+  }
+
+  function applyRemote(remote) {
+    if (!remote || typeof remote !== "object") return false;
+    let changed = false;
+    SYNC_KEYS.forEach(k => {
+      if (!(k in remote)) return;
+      const localVal = lsGet(k);
+      const remoteVal = typeof remote[k] === "string" ? remote[k] : JSON.stringify(remote[k]);
+      if (localVal === null || localVal !== remoteVal) { lsSet(k, remoteVal); changed = true; }
+    });
+    return changed;
+  }
+
+  async function pushNow() {
+    if (!currentUser || pushInFlight) return;
+    pushInFlight = true;
+    try {
+      const payload = collectLocal();
+      const { error } = await sb.from("neuro_user_data").upsert(
+        { user_id: currentUser.id, data: payload, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      if (error) console.warn("[sync] push failed:", error.message);
+    } catch (e) { console.warn("[sync] push exception:", e); }
+    finally { pushInFlight = false; }
+  }
+
+  window.syncPush = function () {
+    if (!currentUser) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(pushNow, 1500);
+  };
+
+  async function pullAndMerge() {
+    if (!currentUser) return;
+    const { data, error } = await sb.from("neuro_user_data").select("data").eq("user_id", currentUser.id).maybeSingle();
+    if (error) { console.warn("[sync] pull failed:", error.message); return; }
+    if (data && data.data) {
+      const changed = applyRemote(data.data);
+      if (changed) {
+        cards = JSON.parse(lsGet("cards") || "[]");
+        vocab = JSON.parse(lsGet("vocab") || "[]");
+        points = Number(lsGet("points") || 0);
+        correct = Number(lsGet("correct") || 0);
+        total = Number(lsGet("total") || 0);
+        try { index = 0; studyQueue = null; } catch (e) {}
+        try { vocabIndex = 0; vocabQueue = null; } catch (e) {}
+        try { updateQuiz(); } catch (e) {}
+        try { updateVocab(); } catch (e) {}
+        try { updateStats(); } catch (e) {}
+        try { renderLibrary(); } catch (e) {}
+        try { if (typeof renderXP === "function") renderXP(); } catch (e) {}
+        showToast("Daten geladen ☁️");
+      }
+    } else { await pushNow(); }
+  }
+
+  const _origSave = window.save;
+  window.save = function () { try { _origSave && _origSave(); } catch (e) {} window.syncPush(); };
+
+  /* ---------- Avatar ---------- */
+  function initialsFromEmail(email) {
+    if (!email) return "?";
+    const local = email.split("@")[0];
+    const parts = local.split(/[._-]+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return local.slice(0, 2).toUpperCase();
+  }
+
+  /* ---------- Auth Bar ---------- */
+  function renderAuthBar(signedIn, email) {
+    const bar = document.getElementById("authBar"); if (!bar) return;
+    bar.replaceChildren();
+    if (signedIn) {
+      const b = document.createElement("button");
+      b.id = "accountBtn";
+      const span = document.createElement("span");
+      span.className = "avatar";
+      span.textContent = initialsFromEmail(email);
+      b.appendChild(span);
+      b.appendChild(document.createTextNode(email || "Konto"));
+      b.style.cssText = "display:flex;align-items:center;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";
+      b.onclick = (e) => { e.stopPropagation(); toggleAccountMenu(); };
+      bar.appendChild(b);
+    } else {
+      const b1 = document.createElement("button");
+      b1.textContent = "Anmelden";
+      b1.onclick = () => openAuth("signin");
+      const b2 = document.createElement("button");
+      b2.textContent = "Registrieren";
+      b2.style.cssText = "background:var(--accent);border-color:var(--accent);color:#fff";
+      b2.onclick = () => openAuth("signup");
+      bar.append(b1, b2);
+    }
+  }
+
+  window.openAuth = function (mode) {
+    authMode = mode || "signin";
+    const title = document.getElementById("authTitle");
+    const submit = document.getElementById("authSubmit");
+    const toggleText = document.getElementById("authToggleText");
+    const toggleBtn = document.getElementById("authToggleBtn");
+    const confirmWrap = document.getElementById("authConfirmWrap");
+    const pw = document.getElementById("authPassword");
+    if (authMode === "signin") {
+      title.textContent = "Anmelden"; submit.textContent = "Anmelden";
+      toggleText.textContent = "Noch kein Konto?"; toggleBtn.textContent = "Registrieren";
+      confirmWrap.classList.add("hidden"); pw.autocomplete = "current-password";
+    } else {
+      title.textContent = "Konto erstellen"; submit.textContent = "Konto erstellen";
+      toggleText.textContent = "Schon ein Konto?"; toggleBtn.textContent = "Anmelden";
+      confirmWrap.classList.remove("hidden"); pw.autocomplete = "new-password";
+    }
+    authError("");
+    document.getElementById("authForm").reset();
+    document.getElementById("authOverlay").classList.remove("hidden");
+    setTimeout(() => document.getElementById("authEmail").focus(), 100);
+  };
+
+  window.closeAuth = function () {
+    document.getElementById("authOverlay").classList.add("hidden");
+    authError("");
+  };
+
+  window.toggleAuthMode = function () { openAuth(authMode === "signin" ? "signup" : "signin"); };
+
+  window.submitAuth = async function (e) {
+    e.preventDefault();
+    authError("");
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const submit = document.getElementById("authSubmit");
+    submit.disabled = true; const oldLabel = submit.textContent; submit.textContent = "Bitte warten...";
+    try {
+      if (authMode === "signup") {
+        const confirm = document.getElementById("authConfirm").value;
+        if (password !== confirm) { authError("Passwörter stimmen nicht überein."); return false; }
+        if (password.length < 6) { authError("Passwort muss mindestens 6 Zeichen haben."); return false; }
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) { authError(translateAuthError(error.message)); return false; }
+        if (data.user && !data.session) {
+          authError("Fast fertig! Bitte bestätige deine E-Mail über den Link, den wir dir geschickt haben.");
+          return false;
+        }
+        showToast("Konto erstellt ✅ Willkommen!"); closeAuth();
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) { authError(translateAuthError(error.message)); return false; }
+        showToast("Angemeldet ✅"); closeAuth();
+      }
+    } catch (err) { authError("Verbindung fehlgeschlagen. Bitte erneut versuchen."); }
+    finally { submit.disabled = false; submit.textContent = oldLabel; }
+    return false;
+  };
+
+  window.signInWithGoogle = async function () {
+    authError("");
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.href.split("#")[0] }
+    });
+    if (error) authError("Google-Login fehlgeschlagen: " + error.message);
+  };
+
+  window.forgotPassword = async function () {
+    const email = document.getElementById("authEmail").value.trim();
+    if (!email) { authError("Bitte zuerst deine E-Mail eintragen."); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split("#")[0] });
+    if (error) { authError(translateAuthError(error.message)); return; }
+    authError(""); showToast("Reset-Link an " + email + " gesendet 📧");
+  };
+
+  window.openChangeEmail = async function () {
+    toggleAccountMenu(false);
+    const ne = prompt("Neue E-Mail-Adresse:");
+    if (!ne) return;
+    const { error } = await sb.auth.updateUser({ email: ne });
+    if (error) showToast("Fehler: " + error.message);
+    else showToast("Bestätigungslink an " + ne + " gesendet. Bitte prüfe dein Postfach.");
+  };
+
+  window.openChangePassword = async function () {
+    toggleAccountMenu(false);
+    const newPw = prompt("Neues Passwort (mind. 6 Zeichen):");
+    if (!newPw) return;
+    if (newPw.length < 6) { showToast("Passwort zu kurz."); return; }
+    const { error } = await sb.auth.updateUser({ password: newPw });
+    if (error) showToast("Fehler: " + error.message);
+    else showToast("Passwort geändert ✅");
+  };
+
+  window.confirmSyncNow = async function () {
+    toggleAccountMenu(false);
+    await pushNow();
+    showToast("Synchronisiert ☁️");
+  };
+
+  window.signOutUser = async function () {
+    toggleAccountMenu(false);
+    await sb.auth.signOut();
+    showToast("Abgemeldet. Deine Daten bleiben lokal erhalten.");
+  };
+
+  window.toggleAccountMenu = function (force) {
+    const menu = document.getElementById("accountMenu");
+    const show = force !== undefined ? force : menu.classList.contains("hidden");
+    menu.classList.toggle("hidden", !show);
+    if (show && currentUser) document.getElementById("accountEmail").textContent = currentUser.email || "–";
+  };
+
+  /* ---------- Konto löschen ---------- */
+  window.openDeleteAccount = function () {
+    toggleAccountMenu(false);
+    document.getElementById("deleteOverlay").classList.remove("hidden");
+    document.getElementById("deleteConfirmInput").value = "";
+    document.getElementById("deleteError").classList.add("hidden");
+  };
+  window.closeDeleteAccount = function () {
+    document.getElementById("deleteOverlay").classList.add("hidden");
+  };
+  window.confirmDeleteAccount = async function () {
+    const inp = document.getElementById("deleteConfirmInput").value.trim();
+    const err = document.getElementById("deleteError");
+    const btn = document.getElementById("deleteConfirmBtn");
+    if (inp !== "LÖSCHEN") {
+      err.textContent = "Bitte tippe exakt LÖSCHEN ein."; err.classList.remove("hidden"); return;
+    }
+    btn.disabled = true; btn.textContent = "Wird gelöscht...";
+    try {
+      // 1) Cloud-Daten löschen (Tabelle)
+      if (currentUser) {
+        await sb.from("neuro_user_data").delete().eq("user_id", currentUser.id);
+      }
+      // 2) Auth-User löschen (nur möglich mit SQL-Funktion delete_own_account)
+      const { error: rpcErr } = await sb.rpc("delete_own_account");
+      if (rpcErr) {
+        err.innerHTML = "Deine Lerndaten wurden gelöscht, aber der Login-Account konnte nicht automatisch entfernt werden.<br><br>Bitte wende dich an den Support – oder führe in Supabase einmalig die SQL-Funktion <code>delete_own_account</code> aus (siehe Setup-Anleitung).";
+        err.classList.remove("hidden");
+        btn.disabled = false; btn.textContent = "Konto löschen";
+        // Lokale Daten trotzdem löschen + abmelden
+        ["cards","vocab","points","correct","total","folders","recent","xp","level","achievements","streakDays","modeStats","recent"].forEach(lsDel);
+        await sb.auth.signOut();
+        return;
+      }
+      // 3) Lokale Daten löschen
+      ["cards","vocab","points","correct","total","folders","recent","xp","level","achievements","streakDays","modeStats"].forEach(lsDel);
+      await sb.auth.signOut();
+      showToast("Konto gelöscht. Auf Wiedersehen!");
+      closeDeleteAccount();
+    } catch (e) {
+      err.textContent = "Fehler beim Löschen: " + e.message;
+      err.classList.remove("hidden");
+    } finally {
+      btn.disabled = false; btn.textContent = "Konto löschen";
+    }
+  };
+
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("accountMenu");
+    const btn = document.getElementById("accountBtn");
+    if (!menu.classList.contains("hidden") && !menu.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+      menu.classList.add("hidden");
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (!document.getElementById("authOverlay").classList.contains("hidden")) closeAuth();
+      if (!document.getElementById("deleteOverlay").classList.contains("hidden")) closeDeleteAccount();
+      toggleAccountMenu(false);
+    }
+  });
+
+  function translateAuthError(msg) {
+    const m = String(msg || "").toLowerCase();
+    if (m.includes("invalid login credentials")) return "E-Mail oder Passwort falsch.";
+    if (m.includes("user already registered")) return "Diese E-Mail ist bereits registriert. Bitte anmelden.";
+    if (m.includes("password should be at least")) return "Passwort muss mindestens 6 Zeichen haben.";
+    if (m.includes("unable to validate email")) return "Bitte eine gültige E-Mail-Adresse eingeben.";
+    if (m.includes("email not confirmed")) return "Bitte bestätige zuerst deine E-Mail.";
+    if (m.includes("rate limit")) return "Zu viele Versuche. Bitte kurz warten.";
+    return msg;
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    const wasSignedIn = !!currentUser;
+    currentUser = session?.user || null;
+    if (currentUser) {
+      renderAuthBar(true, currentUser.email);
+      if (!wasSignedIn || event === "SIGNED_IN") await pullAndMerge();
+    } else {
+      renderAuthBar(false);
+    }
+    if (event === "PASSWORD_RECOVERY") {
+      const newPw = prompt("Neues Passwort eingeben:");
+      if (newPw && newPw.length >= 6) {
+        const { error } = await sb.auth.updateUser({ password: newPw });
+        if (error) showToast("Fehler: " + error.message);
+        else showToast("Passwort geändert ✅");
+      }
+    }
+  });
+
+  sb.auth.getSession().then(({ data }) => {
+    currentUser = data?.session?.user || null;
+    if (currentUser) { renderAuthBar(true, currentUser.email); pullAndMerge(); }
+    else renderAuthBar(false);
+  });
+})();
+</script>
+
+<script>
+/* ===================== i18n (DE/EN) ===================== */
+(function () {
+  const EN = {
+    "Richtig!": "Correct!", "Genau so!": "Exactly!", "Stark, weiter so!": "Great, keep it up!", "Sehr gut!": "Very good!", "Das sitzt!": "You've got it!", "Top gemacht!": "Well done!", "Perfekt!": "Perfect!",
+    "Nicht schlimm, das kommt wieder.": "No worries, it will come back.", "Fast! Beim nächsten Mal klappt's.": "Almost! You'll get it next time.",
+    "Kein Problem, so lernt man.": "No problem, that's how we learn.", "Schau dir die Antwort in Ruhe an.": "Take your time to look at the answer.",
+    "Bereit? Zeig, was du weißt!": "Ready? Show what you know!", "Wusstest du es?": "Did you know it?", "Kennst du die Übersetzung?": "Do you know the translation?",
+    "Erstelle zuerst ein paar Lernkarten, dann legen wir los.": "Create a few flashcards first, then we'll get started.",
+    "Füge Vokabeln hinzu, dann üben wir zusammen.": "Add some words and we'll practice together.",
+    "Hi, ich bin Nuri! Was möchtest du heute lernen?": "Hi, I'm Nuri! What would you like to study today?",
+    "Geschafft! Die Runde ist durch.": "Done! Round complete.", "Runde geschafft! Das sitzt jetzt.": "Round done! Now you've got them.",
+    "Wähle einen Modus und leg los!": "Choose a mode and get started!",
+    "Start": "Home", "Bild scannen": "Scan image", "Abfragen": "Quiz", "Lernmodi": "Modes", "Vokabeln": "Vocabulary", "Fortschritt": "Progress", "Bibliothek": "Library",
+    "Willkommen zurück!": "Welcome back!", "Jetzt lernen": "Start learning",
+    "Anmelden": "Sign in", "Registrieren": "Sign up", "Abmelden": "Sign out", "Konto erstellen": "Create account",
+    "E-Mail": "Email", "Passwort": "Password", "Passwort wiederholen": "Confirm password", "Passwort vergessen?": "Forgot password?",
+    "Noch kein Konto?": "No account yet?", "Schon ein Konto?": "Already have an account?",
+    "Mit Google anmelden": "Sign in with Google", "oder mit E-Mail": "or with email",
+    "Angemeldet als": "Signed in as", "E-Mail ändern": "Change email", "Passwort ändern": "Change password",
+    "Jetzt synchronisieren": "Sync now", "Konto löschen": "Delete account", "Konto löschen?": "Delete account?",
+    "Abbrechen": "Cancel", "Modus beenden": "End mode", "Erfolge": "Achievements"
+  };
+  let LANG = "de";
+  try { LANG = localStorage.getItem("lang") || ((navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en"); } catch (e) {}
+
+  window.trText = function (s) {
+    if (LANG !== "en") return s;
+    const k = String(s).trim();
+    if (!k) return s;
+    if (Object.prototype.hasOwnProperty.call(EN, k)) return String(s).replace(k, EN[k]);
+    return s;
+  };
+
+  const recs = new WeakMap();
+  const skip = n => { const p = n.parentNode; return !p || /^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName); };
+  function proc(n) {
+    if (skip(n)) return;
+    const v = n.nodeValue, r = recs.get(n);
+    if (r && v === r.out) return;
+    const out = LANG === "en" ? window.trText(v) : v;
+    recs.set(n, { orig: v, out: out });
+    if (out !== v) n.nodeValue = out;
+  }
+  function walk(root) {
+    if (root.nodeType === 3) { proc(root); return; }
+    if (root.nodeType !== 1 && root.nodeType !== 11) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const list = [];
+    while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(proc);
+    if (root.querySelectorAll) root.querySelectorAll("[placeholder]").forEach(ph);
+  }
+  function ph(el) {
+    if (el.dataset.phDe === undefined) el.dataset.phDe = el.getAttribute("placeholder");
+    el.setAttribute("placeholder", LANG === "en" ? window.trText(el.dataset.phDe) : el.dataset.phDe);
+  }
+  function applyAll() {
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const list = [];
+    while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(n => {
+      if (skip(n)) return;
+      const r = recs.get(n);
+      const src = r ? r.orig : n.nodeValue;
+      const out = LANG === "en" ? window.trText(src) : src;
+      recs.set(n, { orig: src, out: out });
+      if (n.nodeValue !== out) n.nodeValue = out;
+    });
+    document.querySelectorAll("[placeholder]").forEach(ph);
+    document.documentElement.lang = LANG;
+    document.getElementById("langDe").classList.toggle("active", LANG === "de");
+    document.getElementById("langEn").classList.toggle("active", LANG === "en");
+  }
+  window.setLang = function (l) {
+    LANG = l;
+    try { localStorage.setItem("lang", l); } catch (e) {}
+    applyAll();
+  };
+  window.getLang = () => LANG;
+
+  new MutationObserver(ms => {
+    ms.forEach(m => {
+      if (m.type === "characterData") proc(m.target);
+      else m.addedNodes.forEach(walk);
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  let _tt;
+  window.showToast = function (m) {
+    const t = document.getElementById("toast");
+    t.textContent = m;
+    t.classList.remove("hidden");
+    clearTimeout(_tt);
+    _tt = setTimeout(() => t.classList.add("hidden"), 4500);
+  };
+  window.alert = m => window.showToast(window.trText(String(m)));
+
+  applyAll();
+})();
+</script>
+
+<script>
+/* ===================== INIT ===================== */
+buddyInit();
+updateQuiz();
+updateVocab();
+updateStats();
+renderStats();
+try { renderXP(); } catch (e) {}
+</script>
+
+</body>
+</html>
