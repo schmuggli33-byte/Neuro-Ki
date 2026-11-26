@@ -21,10 +21,9 @@ body {
   font-size: 15px; line-height: 1.55;
   background: var(--bg); color: var(--text);
 }
-header { padding: 22px 28px 18px; background: var(--surface); border-bottom: 1px solid var(--border); }
-.logo { font-size: 15px; font-weight: 700; letter-spacing: .22em; color: var(--text); }
+header { position: relative; padding: 22px 28px 18px; background: var(--surface); border-bottom: 1px solid var(--border); }.logo { font-size: 15px; font-weight: 700; letter-spacing: .22em; color: var(--text); }
 header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-header { position: relative; }
+
 .langsw { position: absolute; right: 20px; top: 20px; display: flex; gap: 4px; }
 .langsw button { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
 main { max-width: 1120px; margin: auto; padding: 24px 20px 48px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -749,35 +748,14 @@ function record(c, ok) {
   save();
 }
 
-async function getStore() { return null; }
-
 let libCur = "";
 let libAll = [];
 
 async function libList() {
-  const st = await getStore();
-  if (st) {
-    const snap = await st.col.get();
-    return snap.docs.filter(d => d.id.indexOf("folder_") === 0).map(d => {
-      const x = d.data() || {};
-      let cs = [], vs = [];
-      try { cs = JSON.parse(x.cards || "[]"); } catch (e) {}
-      try { vs = JSON.parse(x.vocab || "[]"); } catch (e) {}
-      return { id: d.id, name: String(x.name || "Ordner"), parent: String(x.parent || ""), cards: cs, vocab: vs };
-    });
-  }
   try { return JSON.parse(lsGet("folders") || "[]"); } catch (e) { return []; }
 }
 
 async function libPut(f) {
-  const st = await getStore();
-  if (st) {
-    await st.col.doc(f.id).set({
-      name: f.name, parent: f.parent || "",
-      cards: JSON.stringify(f.cards || []), vocab: JSON.stringify(f.vocab || []), updated: Date.now()
-    });
-    return;
-  }
   const all = await libList();
   const i = all.findIndex(x => x.id === f.id);
   if (i >= 0) all[i] = f; else all.push(f);
@@ -785,8 +763,6 @@ async function libPut(f) {
 }
 
 async function libDel(id) {
-  const st = await getStore();
-  if (st) { await st.col.doc(id).delete(); return; }
   const all = (await libList()).filter(x => x.id !== id);
   lsSet("folders", JSON.stringify(all));
 }
@@ -853,10 +829,8 @@ async function renderLibrary() {
   const list = document.getElementById("folderList");
   const crumbs = document.getElementById("libCrumbs");
   const box = document.getElementById("libContent");
-  const st = await getStore();
-  document.getElementById("libMode").textContent = st
-    ? "Gespeichert in deinem Claude-Konto, auf allen deinen Geräten verfügbar."
-    : "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.";
+  document.getElementById("libMode").textContent =
+    "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.";
   list.textContent = "Lädt...";
   try { libAll = await libList(); } catch (e) { list.textContent = "Ordner konnten nicht geladen werden."; return; }
   if (libCur && !libNode(libCur)) libCur = "";
@@ -1316,8 +1290,7 @@ updateQuiz();
     "Erstelle zuerst Lernkarten.": "Create some flashcards first.", "Anpassung fehlgeschlagen. Bitte erneut versuchen.": "Adaptation failed. Please try again.",
     "Ordner konnten nicht geladen werden.": "Folders could not be loaded.", "Lädt...": "Loading...",
     "Noch keine Ordner. Speichere oben deine ersten Karten.": "No folders yet. Save your first cards above.",
-    "Gespeichert in deinem Claude-Konto, auf allen deinen Geräten verfügbar.": "Saved in your Claude account, available on all your devices.",
-    "Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.": "Saved in this browser only. Cards and folders are not available on other devices.",
+"Nur in diesem Browser gespeichert. Auf anderen Geräten sind Karten und Ordner nicht verfügbar.": "Saved in this browser only. Cards and folders are not available on other devices.",
     "Bitte zuerst einen Ordnernamen eingeben.": "Please enter a folder name first.", "Du hast noch keine Karten zum Speichern.": "You have no cards to save yet.",
     "Speichern fehlgeschlagen. Bitte erneut versuchen.": "Saving failed. Please try again.",
     "Umbenennen fehlgeschlagen.": "Renaming failed.", "Löschen fehlgeschlagen.": "Deleting failed.",
